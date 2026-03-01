@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include "Utils.h"
 
 namespace ImageProcessing {
 
@@ -26,6 +27,19 @@ namespace ImageProcessing {
 	private: System::Windows::Forms::RichTextBox^ inputMask;
 	private: System::Windows::Forms::Label^ label4;
 	private: System::Windows::Forms::Panel^ panel2;
+
+	private: System::Windows::Forms::Button^ replaceToInputButton;
+	private: System::Windows::Forms::Panel^ panel4;
+	private: System::Windows::Forms::RichTextBox^ inputMaskX;
+
+
+	private: System::Windows::Forms::Label^ label5;
+	private: System::Windows::Forms::Panel^ panel5;
+	private: System::Windows::Forms::RichTextBox^ inputMaskY;
+
+	private: System::Windows::Forms::Label^ label6;
+	private: System::Windows::Forms::Button^ applyGradientButton;
+
 	public:
 	private:
 		int *inputImage = new int[400*400];
@@ -88,11 +102,21 @@ namespace ImageProcessing {
 			this->inputMask = (gcnew System::Windows::Forms::RichTextBox());
 			this->label4 = (gcnew System::Windows::Forms::Label());
 			this->panel2 = (gcnew System::Windows::Forms::Panel());
+			this->replaceToInputButton = (gcnew System::Windows::Forms::Button());
+			this->panel4 = (gcnew System::Windows::Forms::Panel());
+			this->inputMaskX = (gcnew System::Windows::Forms::RichTextBox());
+			this->label5 = (gcnew System::Windows::Forms::Label());
+			this->panel5 = (gcnew System::Windows::Forms::Panel());
+			this->inputMaskY = (gcnew System::Windows::Forms::RichTextBox());
+			this->label6 = (gcnew System::Windows::Forms::Label());
+			this->applyGradientButton = (gcnew System::Windows::Forms::Button());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureIn))->BeginInit();
 			this->panel1->SuspendLayout();
 			this->panel3->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureOut))->BeginInit();
 			this->panel2->SuspendLayout();
+			this->panel4->SuspendLayout();
+			this->panel5->SuspendLayout();
 			this->SuspendLayout();
 			// 
 			// pictureIn
@@ -134,7 +158,7 @@ namespace ImageProcessing {
 			this->panel3->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(40)), static_cast<System::Int32>(static_cast<System::Byte>(40)),
 				static_cast<System::Int32>(static_cast<System::Byte>(40)));
 			this->panel3->Controls->Add(this->pictureOut);
-			this->panel3->Location = System::Drawing::Point(555, 33);
+			this->panel3->Location = System::Drawing::Point(744, 36);
 			this->panel3->Name = L"panel3";
 			this->panel3->Size = System::Drawing::Size(408, 408);
 			this->panel3->TabIndex = 4;
@@ -155,7 +179,7 @@ namespace ImageProcessing {
 			this->moveMaskButton->FlatStyle = System::Windows::Forms::FlatStyle::Popup;
 			this->moveMaskButton->Font = (gcnew System::Drawing::Font(L"Century Gothic", 7.8F));
 			this->moveMaskButton->ForeColor = System::Drawing::Color::White;
-			this->moveMaskButton->Location = System::Drawing::Point(134, 447);
+			this->moveMaskButton->Location = System::Drawing::Point(453, 119);
 			this->moveMaskButton->Name = L"moveMaskButton";
 			this->moveMaskButton->Size = System::Drawing::Size(111, 25);
 			this->moveMaskButton->TabIndex = 5;
@@ -182,7 +206,7 @@ namespace ImageProcessing {
 			this->label1->Font = (gcnew System::Drawing::Font(L"Century Gothic", 11, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(162)));
 			this->label1->ForeColor = System::Drawing::Color::White;
-			this->label1->Location = System::Drawing::Point(556, 9);
+			this->label1->Location = System::Drawing::Point(745, 12);
 			this->label1->Margin = System::Windows::Forms::Padding(2, 0, 2, 0);
 			this->label1->Name = L"label1";
 			this->label1->Size = System::Drawing::Size(114, 20);
@@ -208,7 +232,7 @@ namespace ImageProcessing {
 			this->label3->Font = (gcnew System::Drawing::Font(L"Century Gothic", 9, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(162)));
 			this->label3->ForeColor = System::Drawing::Color::White;
-			this->label3->Location = System::Drawing::Point(907, 444);
+			this->label3->Location = System::Drawing::Point(1096, 447);
 			this->label3->Margin = System::Windows::Forms::Padding(2, 0, 2, 0);
 			this->label3->Name = L"label3";
 			this->label3->Size = System::Drawing::Size(56, 17);
@@ -235,7 +259,7 @@ namespace ImageProcessing {
 			this->label4->Font = (gcnew System::Drawing::Font(L"Century Gothic", 11, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(162)));
 			this->label4->ForeColor = System::Drawing::Color::White;
-			this->label4->Location = System::Drawing::Point(460, 12);
+			this->label4->Location = System::Drawing::Point(451, 12);
 			this->label4->Margin = System::Windows::Forms::Padding(2, 0, 2, 0);
 			this->label4->Name = L"label4";
 			this->label4->Size = System::Drawing::Size(52, 20);
@@ -247,10 +271,113 @@ namespace ImageProcessing {
 			this->panel2->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(40)), static_cast<System::Int32>(static_cast<System::Byte>(40)),
 				static_cast<System::Int32>(static_cast<System::Byte>(40)));
 			this->panel2->Controls->Add(this->inputMask);
-			this->panel2->Location = System::Drawing::Point(455, 33);
+			this->panel2->Location = System::Drawing::Point(453, 35);
 			this->panel2->Name = L"panel2";
 			this->panel2->Size = System::Drawing::Size(77, 78);
 			this->panel2->TabIndex = 38;
+			// 
+			// replaceToInputButton
+			// 
+			this->replaceToInputButton->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(58)),
+				static_cast<System::Int32>(static_cast<System::Byte>(58)), static_cast<System::Int32>(static_cast<System::Byte>(58)));
+			this->replaceToInputButton->FlatStyle = System::Windows::Forms::FlatStyle::Popup;
+			this->replaceToInputButton->Font = (gcnew System::Drawing::Font(L"Century Gothic", 7.8F));
+			this->replaceToInputButton->ForeColor = System::Drawing::Color::White;
+			this->replaceToInputButton->Location = System::Drawing::Point(744, 450);
+			this->replaceToInputButton->Name = L"replaceToInputButton";
+			this->replaceToInputButton->Size = System::Drawing::Size(112, 25);
+			this->replaceToInputButton->TabIndex = 40;
+			this->replaceToInputButton->Text = L"Replace To Input";
+			this->replaceToInputButton->UseVisualStyleBackColor = false;
+			// 
+			// panel4
+			// 
+			this->panel4->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(40)), static_cast<System::Int32>(static_cast<System::Byte>(40)),
+				static_cast<System::Int32>(static_cast<System::Byte>(40)));
+			this->panel4->Controls->Add(this->inputMaskX);
+			this->panel4->Location = System::Drawing::Point(451, 197);
+			this->panel4->Name = L"panel4";
+			this->panel4->Size = System::Drawing::Size(77, 78);
+			this->panel4->TabIndex = 42;
+			// 
+			// inputMaskX
+			// 
+			this->inputMaskX->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(50)), static_cast<System::Int32>(static_cast<System::Byte>(50)),
+				static_cast<System::Int32>(static_cast<System::Byte>(50)));
+			this->inputMaskX->BorderStyle = System::Windows::Forms::BorderStyle::None;
+			this->inputMaskX->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 14, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(162)));
+			this->inputMaskX->ForeColor = System::Drawing::SystemColors::Window;
+			this->inputMaskX->Location = System::Drawing::Point(2, 2);
+			this->inputMaskX->Name = L"inputMaskX";
+			this->inputMaskX->Size = System::Drawing::Size(73, 74);
+			this->inputMaskX->TabIndex = 36;
+			this->inputMaskX->Text = L"-1 0 1\n-1 0 1\n-1 0 1";
+			// 
+			// label5
+			// 
+			this->label5->AutoSize = true;
+			this->label5->Font = (gcnew System::Drawing::Font(L"Century Gothic", 11, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(162)));
+			this->label5->ForeColor = System::Drawing::Color::White;
+			this->label5->Location = System::Drawing::Point(449, 174);
+			this->label5->Margin = System::Windows::Forms::Padding(2, 0, 2, 0);
+			this->label5->Name = L"label5";
+			this->label5->Size = System::Drawing::Size(65, 20);
+			this->label5->TabIndex = 41;
+			this->label5->Text = L"Mask X:";
+			// 
+			// panel5
+			// 
+			this->panel5->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(40)), static_cast<System::Int32>(static_cast<System::Byte>(40)),
+				static_cast<System::Int32>(static_cast<System::Byte>(40)));
+			this->panel5->Controls->Add(this->inputMaskY);
+			this->panel5->Location = System::Drawing::Point(583, 197);
+			this->panel5->Name = L"panel5";
+			this->panel5->Size = System::Drawing::Size(77, 78);
+			this->panel5->TabIndex = 44;
+			// 
+			// inputMaskY
+			// 
+			this->inputMaskY->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(50)), static_cast<System::Int32>(static_cast<System::Byte>(50)),
+				static_cast<System::Int32>(static_cast<System::Byte>(50)));
+			this->inputMaskY->BorderStyle = System::Windows::Forms::BorderStyle::None;
+			this->inputMaskY->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 14, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(162)));
+			this->inputMaskY->ForeColor = System::Drawing::SystemColors::Window;
+			this->inputMaskY->Location = System::Drawing::Point(2, 2);
+			this->inputMaskY->Name = L"inputMaskY";
+			this->inputMaskY->Size = System::Drawing::Size(73, 74);
+			this->inputMaskY->TabIndex = 36;
+			this->inputMaskY->Text = L"1 1 1\n0 0 0\n-1 -1 -1";
+			// 
+			// label6
+			// 
+			this->label6->AutoSize = true;
+			this->label6->Font = (gcnew System::Drawing::Font(L"Century Gothic", 11, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(162)));
+			this->label6->ForeColor = System::Drawing::Color::White;
+			this->label6->Location = System::Drawing::Point(581, 174);
+			this->label6->Margin = System::Windows::Forms::Padding(2, 0, 2, 0);
+			this->label6->Name = L"label6";
+			this->label6->Size = System::Drawing::Size(63, 20);
+			this->label6->TabIndex = 43;
+			this->label6->Text = L"Mask Y:";
+			// 
+			// applyGradientButton
+			// 
+			this->applyGradientButton->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(58)),
+				static_cast<System::Int32>(static_cast<System::Byte>(58)), static_cast<System::Int32>(static_cast<System::Byte>(58)));
+			this->applyGradientButton->FlatStyle = System::Windows::Forms::FlatStyle::Popup;
+			this->applyGradientButton->Font = (gcnew System::Drawing::Font(L"Century Gothic", 7.8F));
+			this->applyGradientButton->ForeColor = System::Drawing::Color::White;
+			this->applyGradientButton->Location = System::Drawing::Point(451, 281);
+			this->applyGradientButton->Name = L"applyGradientButton";
+			this->applyGradientButton->Size = System::Drawing::Size(111, 25);
+			this->applyGradientButton->TabIndex = 45;
+			this->applyGradientButton->Text = L"Apply Gradiant";
+			this->applyGradientButton->UseVisualStyleBackColor = false;
+			this->applyGradientButton->Click += gcnew System::EventHandler(this, &MainForm::applyGradientButton_Click);
 			// 
 			// MainForm
 			// 
@@ -258,7 +385,13 @@ namespace ImageProcessing {
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(30)), static_cast<System::Int32>(static_cast<System::Byte>(30)),
 				static_cast<System::Int32>(static_cast<System::Byte>(30)));
-			this->ClientSize = System::Drawing::Size(984, 486);
+			this->ClientSize = System::Drawing::Size(1163, 486);
+			this->Controls->Add(this->applyGradientButton);
+			this->Controls->Add(this->panel5);
+			this->Controls->Add(this->label6);
+			this->Controls->Add(this->panel4);
+			this->Controls->Add(this->label5);
+			this->Controls->Add(this->replaceToInputButton);
 			this->Controls->Add(this->panel2);
 			this->Controls->Add(this->label4);
 			this->Controls->Add(this->label3);
@@ -278,6 +411,8 @@ namespace ImageProcessing {
 			this->panel3->ResumeLayout(false);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureOut))->EndInit();
 			this->panel2->ResumeLayout(false);
+			this->panel4->ResumeLayout(false);
+			this->panel5->ResumeLayout(false);
 			this->ResumeLayout(false);
 			this->PerformLayout();
 
@@ -346,36 +481,9 @@ private: System::Void moveMaskButton_Click(System::Object^ sender, System::Event
 		mask[i] = System::Convert::ToInt32(tokens[i]);
 	}
 
-
-	int rowCount = 400;
-	int colCount = 400;
-
-	int maskRowCount = 3;
-	int maskColCount = 3;
-
-	//MASK matrisinin orta hücresinin kenarlara uzaklýðýný çýkartýrýz.
-	int outRowCount = rowCount - 2;
-	int outColCount = colCount - 2;
-
-	//MASK'IN EDGE PROBLEMÝ YUZUNDEN BELLI BÝR MÝKTAR BOSLUK BIRAKMAK ZORUNDAYIZ GEZINIRKEN!
-
-	int *outPicture = new int[outRowCount*outColCount];
-
-	for (int r = 0; r < outRowCount; r++)
-	{
-		for (int c = 0; c < outColCount; c++)
-		{
-			int sum = 0;
-			for (int i = 0; i < 3; i++)
-				for (int a = 0; a < 3; a++)
-					sum += inputImage[(c + a) + (r+i)*400] * mask[a + i*3];
-
-			if (sum < 0) sum = 0;
-			if (sum > 255) sum = 255;
-			outPicture[c + r * (outColCount)] = sum;
-			
-		}
-	}
+	int *outPicture = MoveMask_OneChannel(inputImage,400,400,mask,3,3);
+	int outRowCount = 398; //BU HESAPLAMALAR OTOMATIK YAPILMALI
+	int outColCount = 398;
 
 //DRAW THE OUTPUT PICTURE
 	System::Drawing::Bitmap^ bmp =
@@ -390,6 +498,66 @@ private: System::Void moveMaskButton_Click(System::Object^ sender, System::Event
 		for (int col = 0; col < outColCount; col++)
 		{
 			int gray = outPicture[row * outColCount + col];
+
+			if (gray < 0) gray = 0;
+			if (gray > 255) gray = 255;
+
+			System::Drawing::Color c =
+				System::Drawing::Color::FromArgb(gray, gray, gray);
+
+			bmp->SetPixel(row, col, c);
+		}
+	}
+
+	pictureOut->SizeMode =
+		System::Windows::Forms::PictureBoxSizeMode::Normal;
+
+	pictureOut->Image = bmp;
+
+}
+private: System::Void applyGradientButton_Click(System::Object^ sender, System::EventArgs^ e) {
+	int mask_X[9];
+	int mask_Y[9];
+
+	System::String^ text_X = inputMaskX->Text;
+	System::String^ text_Y = inputMaskY->Text;
+
+	array<System::String^>^ tokens_x =
+		text_X->Split(gcnew array<wchar_t>{' ', '\n', '\r', '\t'},
+			System::StringSplitOptions::RemoveEmptyEntries);
+
+	array<System::String^>^ tokens_y =
+		text_Y->Split(gcnew array<wchar_t>{' ', '\n', '\r', '\t'},
+			System::StringSplitOptions::RemoveEmptyEntries);
+
+	for (int i = 0; i < 9 && i < tokens_x->Length; i++)
+		mask_X[i] = System::Convert::ToInt32(tokens_x[i]);
+	
+	for (int i = 0; i < 9 && i < tokens_y->Length; i++)
+		mask_Y[i] = System::Convert::ToInt32(tokens_y[i]);
+
+
+	int* outPicture_X = MoveMask_OneChannel(inputImage, 400, 400, mask_X, 3, 3);
+	int* outPicture_Y = MoveMask_OneChannel(inputImage, 400, 400, mask_Y, 3, 3);
+	int outRowCount = 398;
+	int outColCount = 398;
+
+	//DRAW THE OUTPUT PICTURE
+	System::Drawing::Bitmap^ bmp =
+		gcnew System::Drawing::Bitmap(
+			outRowCount,
+			outColCount,
+			System::Drawing::Imaging::PixelFormat::Format24bppRgb
+		);
+
+	for (int row = 0; row < outRowCount; row++)
+	{
+		for (int col = 0; col < outColCount; col++)
+		{
+			int gx = outPicture_X[row * outColCount + col];
+			int gy = outPicture_Y[row * outColCount + col];
+
+			int gray = sqrt(gx * gx + gy * gy);
 
 			if (gray < 0) gray = 0;
 			if (gray > 255) gray = 255;

@@ -39,6 +39,9 @@ namespace ImageProcessing {
 
 	private: System::Windows::Forms::Label^ label6;
 	private: System::Windows::Forms::Button^ applyGradientButton;
+	private: System::Windows::Forms::Button^ applyCannyButton;
+	private: System::Windows::Forms::Button^ button1;
+
 
 	public:
 	private:
@@ -110,6 +113,8 @@ namespace ImageProcessing {
 			this->inputMaskY = (gcnew System::Windows::Forms::RichTextBox());
 			this->label6 = (gcnew System::Windows::Forms::Label());
 			this->applyGradientButton = (gcnew System::Windows::Forms::Button());
+			this->applyCannyButton = (gcnew System::Windows::Forms::Button());
+			this->button1 = (gcnew System::Windows::Forms::Button());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureIn))->BeginInit();
 			this->panel1->SuspendLayout();
 			this->panel3->SuspendLayout();
@@ -379,13 +384,45 @@ namespace ImageProcessing {
 			this->applyGradientButton->UseVisualStyleBackColor = false;
 			this->applyGradientButton->Click += gcnew System::EventHandler(this, &MainForm::applyGradientButton_Click);
 			// 
+			// applyCannyButton
+			// 
+			this->applyCannyButton->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(58)), static_cast<System::Int32>(static_cast<System::Byte>(58)),
+				static_cast<System::Int32>(static_cast<System::Byte>(58)));
+			this->applyCannyButton->FlatStyle = System::Windows::Forms::FlatStyle::Popup;
+			this->applyCannyButton->Font = (gcnew System::Drawing::Font(L"Century Gothic", 7.8F));
+			this->applyCannyButton->ForeColor = System::Drawing::Color::White;
+			this->applyCannyButton->Location = System::Drawing::Point(451, 375);
+			this->applyCannyButton->Name = L"applyCannyButton";
+			this->applyCannyButton->Size = System::Drawing::Size(111, 25);
+			this->applyCannyButton->TabIndex = 46;
+			this->applyCannyButton->Text = L"Canny Edge";
+			this->applyCannyButton->UseVisualStyleBackColor = false;
+			this->applyCannyButton->Click += gcnew System::EventHandler(this, &MainForm::applyCannyButton_Click);
+			// 
+			// button1
+			// 
+			this->button1->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(58)), static_cast<System::Int32>(static_cast<System::Byte>(58)),
+				static_cast<System::Int32>(static_cast<System::Byte>(58)));
+			this->button1->FlatStyle = System::Windows::Forms::FlatStyle::Popup;
+			this->button1->Font = (gcnew System::Drawing::Font(L"Century Gothic", 7.8F));
+			this->button1->ForeColor = System::Drawing::Color::White;
+			this->button1->Location = System::Drawing::Point(1028, 481);
+			this->button1->Name = L"button1";
+			this->button1->Size = System::Drawing::Size(111, 25);
+			this->button1->TabIndex = 47;
+			this->button1->Text = L"show";
+			this->button1->UseVisualStyleBackColor = false;
+			this->button1->Click += gcnew System::EventHandler(this, &MainForm::button1_Click);
+			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(30)), static_cast<System::Int32>(static_cast<System::Byte>(30)),
 				static_cast<System::Int32>(static_cast<System::Byte>(30)));
-			this->ClientSize = System::Drawing::Size(1163, 486);
+			this->ClientSize = System::Drawing::Size(1195, 518);
+			this->Controls->Add(this->button1);
+			this->Controls->Add(this->applyCannyButton);
 			this->Controls->Add(this->applyGradientButton);
 			this->Controls->Add(this->panel5);
 			this->Controls->Add(this->label6);
@@ -418,7 +455,7 @@ namespace ImageProcessing {
 
 		}
 #pragma endregion
-	private: System::Void loadImageButton_Click(System::Object^ sender, System::EventArgs^ e)
+private: System::Void loadImageButton_Click(System::Object^ sender, System::EventArgs^ e)
 	{
 		System::Windows::Forms::OpenFileDialog^ openFileDialog1 =
 			gcnew System::Windows::Forms::OpenFileDialog();
@@ -450,23 +487,21 @@ namespace ImageProcessing {
 
 			delete g;
 
-			for (int row = 0; row < W; row++)
+			for (int row = 0; row < H; row++)
 			{
-				for (int col = 0; col < H; col++)
+				for (int col = 0; col < W; col++)
 				{
-					System::Drawing::Color c = scaled->GetPixel(row, col);
+					System::Drawing::Color c = scaled->GetPixel(col, row);
 
-					//griye çevir
 					int gray = (int)(0.299 * c.R + 0.587 * c.G + 0.114 * c.B);
 
-					inputImage[col + row*400] = gray;
+					inputImage[row * W + col] = gray;
 				}
 			}
 
 			delete scaled;
 		}
 	}
-
 private: System::Void moveMaskButton_Click(System::Object^ sender, System::EventArgs^ e) {
 	int mask[9];
 
@@ -481,15 +516,15 @@ private: System::Void moveMaskButton_Click(System::Object^ sender, System::Event
 		mask[i] = System::Convert::ToInt32(tokens[i]);
 	}
 
-	int *outPicture = MoveMask_OneChannel(inputImage,400,400,mask,3,3);
+	int *outPicture;
 	int outRowCount = 398; //BU HESAPLAMALAR OTOMATIK YAPILMALI
 	int outColCount = 398;
 
 //DRAW THE OUTPUT PICTURE
 	System::Drawing::Bitmap^ bmp =
 		gcnew System::Drawing::Bitmap(
-			outRowCount,
 			outColCount,
+			outRowCount,
 			System::Drawing::Imaging::PixelFormat::Format24bppRgb
 		);
 
@@ -497,15 +532,15 @@ private: System::Void moveMaskButton_Click(System::Object^ sender, System::Event
 	{
 		for (int col = 0; col < outColCount; col++)
 		{
-			int gray = outPicture[row * outColCount + col];
 
-			if (gray < 0) gray = 0;
+			int gray = abs(outPicture[row * outColCount + col]);
 			if (gray > 255) gray = 255;
 
 			System::Drawing::Color c =
 				System::Drawing::Color::FromArgb(gray, gray, gray);
 
-			bmp->SetPixel(row, col, c);
+			bmp->SetPixel(col, row, c); 
+			
 		}
 	}
 
@@ -515,6 +550,7 @@ private: System::Void moveMaskButton_Click(System::Object^ sender, System::Event
 	pictureOut->Image = bmp;
 
 }
+
 private: System::Void applyGradientButton_Click(System::Object^ sender, System::EventArgs^ e) {
 	int mask_X[9];
 	int mask_Y[9];
@@ -536,43 +572,35 @@ private: System::Void applyGradientButton_Click(System::Object^ sender, System::
 	for (int i = 0; i < 9 && i < tokens_y->Length; i++)
 		mask_Y[i] = System::Convert::ToInt32(tokens_y[i]);
 
-
-	int* outPicture_X = MoveMask_OneChannel(inputImage, 400, 400, mask_X, 3, 3);
-	int* outPicture_Y = MoveMask_OneChannel(inputImage, 400, 400, mask_Y, 3, 3);
-	int outRowCount = 398;
-	int outColCount = 398;
+	ImageProcess img(inputImage, 400, 400);
+	ImageMatris* outPictureBin = img.FindGradiant(mask_X, mask_Y); //gradyantý direkt binary olarak alýyor.
+	ImageMatris* outPictureHough = img.HoughLineSpace(outPictureBin);
+	ImageMatris* outPicture = img.LinesImage(outPictureHough,398,398);
 
 	//DRAW THE OUTPUT PICTURE
-	System::Drawing::Bitmap^ bmp =
-		gcnew System::Drawing::Bitmap(
-			outRowCount,
-			outColCount,
-			System::Drawing::Imaging::PixelFormat::Format24bppRgb
-		);
+	System::Drawing::Bitmap^ bmp =gcnew System::Drawing::Bitmap(outPicture->width, outPicture->height,System::Drawing::Imaging::PixelFormat::Format24bppRgb);
 
-	for (int row = 0; row < outRowCount; row++)
+	for (int row = 0; row < outPicture->height; row++)
 	{
-		for (int col = 0; col < outColCount; col++)
+		for (int col = 0; col < outPicture->width; col++)
 		{
-			int gx = outPicture_X[row * outColCount + col];
-			int gy = outPicture_Y[row * outColCount + col];
-
-			int gray = sqrt(gx * gx + gy * gy);
-
-			if (gray < 0) gray = 0;
-			if (gray > 255) gray = 255;
+			int pixel = outPicture->data[row * outPicture->width + col];
+			if (pixel > 255) pixel = 255;
 
 			System::Drawing::Color c =
-				System::Drawing::Color::FromArgb(gray, gray, gray);
+				System::Drawing::Color::FromArgb(pixel, pixel, pixel);
 
-			bmp->SetPixel(row, col, c);
+			bmp->SetPixel(col, row, c);
 		}
 	}
 
-	pictureOut->SizeMode =
-		System::Windows::Forms::PictureBoxSizeMode::Normal;
-
 	pictureOut->Image = bmp;
+
+}
+private: System::Void applyCannyButton_Click(System::Object^ sender, System::EventArgs^ e) {
+
+}
+private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
 
 }
 };

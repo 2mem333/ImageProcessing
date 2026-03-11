@@ -5,7 +5,7 @@ struct ImageMatris {
 };
 
 class ImageProcess {
-	ImageMatris inputImage;
+	ImageMatris *inputImage;
 
 public:
 	void empty(int* data, int size)
@@ -14,18 +14,16 @@ public:
 			data[i] = 0;
 	}
 
-	ImageProcess(int* inpImg, int II_HEIGHT, int II_WIDTH)
+	ImageProcess(ImageMatris* inpImg)
 	{
-		inputImage.data = inpImg;
-		inputImage.height = II_HEIGHT;
-		inputImage.width = II_WIDTH;
+		inputImage = inpImg;
 	}
 
 	int* MoveMask_OneChannel(int* Mask, int M_HEIGHT, int M_WIDTH)
 	{
 		//FIXING THE BORDER PROBLEM.
-		int outRowCount = inputImage.height - 2;
-		int outColCount = inputImage.width - 2;
+		int outRowCount = inputImage->height - 2;
+		int outColCount = inputImage->width - 2;
 
 		int* outPicture = new int[outRowCount * outColCount];
 
@@ -37,7 +35,7 @@ public:
 				int sum = 0;
 				for (int i = 0; i < M_HEIGHT; i++)
 					for (int a = 0; a < M_WIDTH; a++)
-						sum += inputImage.data[(c + a) + (r + i) * inputImage.width] * Mask[(2 - a) + (2 * M_WIDTH) - i * M_WIDTH];
+						sum += inputImage->data[(c + a) + (r + i) * inputImage->width] * Mask[(2 - a) + (2 * M_WIDTH) - i * M_WIDTH];
 				//FLIPPING THE MASK HERE, (CONVULATION RULES)
 				//Mask[(2 - a) + (2 * M_WIDTH) - i * M_WIDTH];
 
@@ -55,8 +53,8 @@ public:
 		ImageMatris* outputImage = new ImageMatris();
 
 		//bunlarýn hesaplamasý sonra ayrýntýlý otomatik yapýlacak, border probleminden kaçýnýyoruz
-		outputImage->width = 398;
-		outputImage->height = 398;
+		outputImage->width = inputImage->width-2;
+		outputImage->height = inputImage->height-2;
 
 		int* outPicture_X = MoveMask_OneChannel(MaskX, 3, 3);
 		int* outPicture_Y = MoveMask_OneChannel(MaskY, 3, 3);
@@ -72,14 +70,14 @@ public:
 
 				int magnitude = sqrt(gx * gx + gy * gy);
 
-				//if (magnitude < 0)
-				//	magnitude = 0;
-				//if (magnitude > 255)
-				//	magnitude = 255;
+				if (magnitude < 0)
+					magnitude = 0;
+				if (magnitude > 255)
+					magnitude = 255;
 
-				//APPLYING TRESHOLD
-				if (magnitude > 200) magnitude = 255;
-				else magnitude = 0;
+				////APPLYING TRESHOLD BINARY IMAGE
+				//if (magnitude > 200) magnitude = 255;
+				//else magnitude = 0;
 
 				data[row * outputImage->width + col] = magnitude;
 			}
@@ -99,15 +97,19 @@ public:
 		outputImage->height = inputImage->height;
 		outputImage->width = inputImage->width;
 
+		int* data = new int[outputImage->height * outputImage->width];
+		empty(data, outputImage->height * outputImage->width);
+
 		for (int row = 0; row < outputImage->height; row++)
 			for (int col = 0; col < outputImage->width; col++)
 			{
 				int indeks = row * outputImage->width + col;
 
 				if (inputImage->data[indeks] > treshold)
-					outputImage->data[indeks] = 255;
+					data[indeks] = 255;
 			}
 
+		outputImage->data = data;
 		return outputImage;
 	}
 
@@ -149,7 +151,7 @@ public:
 
 	}
 
-	ImageMatris* LinesImage(ImageMatris* houghImage, int realWidth, int realHeight)
+	ImageMatris* LinesImage(ImageMatris* houghImage, int realWidth, int realHeight, int treshold)
 	{
 		ImageMatris* outputImage = new ImageMatris();
 
@@ -165,7 +167,8 @@ public:
 		{
 			for (int teta = 0; teta < houghImage->width; teta++)
 			{
-				if (houghImage->data[p * houghImage->width + teta] < 70) //buradaki deðer neye göre belirlenecek?
+				//belli bir esikten daha fazla oy alinmis mi diye kontrol etmek gerek
+				if (houghImage->data[p * houghImage->width + teta] < treshold) //buradaki deðer neye göre belirlenecek?
 					continue;
 
 				double rad = teta * 3.14159265 / 180.0;

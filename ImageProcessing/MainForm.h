@@ -41,11 +41,15 @@ namespace ImageProcessing {
 	private: System::Windows::Forms::Button^ applyGradientButton;
 	private: System::Windows::Forms::Button^ applyCannyButton;
 	private: System::Windows::Forms::Button^ button1;
+	private: System::Windows::Forms::TextBox^ textBox1;
+	private: System::Windows::Forms::TextBox^ textBox2;
+	private: System::Windows::Forms::Label^ label7;
+	private: System::Windows::Forms::Label^ label8;
 
 
 	public:
 	private:
-		int *inputImage = new int[400*400];
+		ImageMatris* inputImage = new ImageMatris();
 
 	protected:
 		/// <summary>
@@ -115,6 +119,10 @@ namespace ImageProcessing {
 			this->applyGradientButton = (gcnew System::Windows::Forms::Button());
 			this->applyCannyButton = (gcnew System::Windows::Forms::Button());
 			this->button1 = (gcnew System::Windows::Forms::Button());
+			this->textBox1 = (gcnew System::Windows::Forms::TextBox());
+			this->textBox2 = (gcnew System::Windows::Forms::TextBox());
+			this->label7 = (gcnew System::Windows::Forms::Label());
+			this->label8 = (gcnew System::Windows::Forms::Label());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureIn))->BeginInit();
 			this->panel1->SuspendLayout();
 			this->panel3->SuspendLayout();
@@ -414,6 +422,42 @@ namespace ImageProcessing {
 			this->button1->UseVisualStyleBackColor = false;
 			this->button1->Click += gcnew System::EventHandler(this, &MainForm::button1_Click);
 			// 
+			// textBox1
+			// 
+			this->textBox1->Location = System::Drawing::Point(611, 422);
+			this->textBox1->Name = L"textBox1";
+			this->textBox1->Size = System::Drawing::Size(44, 20);
+			this->textBox1->TabIndex = 48;
+			this->textBox1->Text = L"150";
+			// 
+			// textBox2
+			// 
+			this->textBox2->Location = System::Drawing::Point(611, 455);
+			this->textBox2->Name = L"textBox2";
+			this->textBox2->Size = System::Drawing::Size(44, 20);
+			this->textBox2->TabIndex = 49;
+			this->textBox2->Text = L"200";
+			// 
+			// label7
+			// 
+			this->label7->AutoSize = true;
+			this->label7->ForeColor = System::Drawing::SystemColors::ButtonHighlight;
+			this->label7->Location = System::Drawing::Point(493, 425);
+			this->label7->Name = L"label7";
+			this->label7->Size = System::Drawing::Size(112, 13);
+			this->label7->TabIndex = 50;
+			this->label7->Text = L"Binary Image Treshold";
+			// 
+			// label8
+			// 
+			this->label8->AutoSize = true;
+			this->label8->ForeColor = System::Drawing::SystemColors::ButtonHighlight;
+			this->label8->Location = System::Drawing::Point(504, 459);
+			this->label8->Name = L"label8";
+			this->label8->Size = System::Drawing::Size(101, 13);
+			this->label8->TabIndex = 51;
+			this->label8->Text = L"Lines Vote Treshold";
+			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -421,6 +465,10 @@ namespace ImageProcessing {
 			this->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(30)), static_cast<System::Int32>(static_cast<System::Byte>(30)),
 				static_cast<System::Int32>(static_cast<System::Byte>(30)));
 			this->ClientSize = System::Drawing::Size(1195, 518);
+			this->Controls->Add(this->label8);
+			this->Controls->Add(this->label7);
+			this->Controls->Add(this->textBox2);
+			this->Controls->Add(this->textBox1);
 			this->Controls->Add(this->button1);
 			this->Controls->Add(this->applyCannyButton);
 			this->Controls->Add(this->applyGradientButton);
@@ -455,7 +503,7 @@ namespace ImageProcessing {
 
 		}
 #pragma endregion
-private: System::Void loadImageButton_Click(System::Object^ sender, System::EventArgs^ e)
+	private: System::Void loadImageButton_Click(System::Object^ sender, System::EventArgs^ e)
 	{
 		System::Windows::Forms::OpenFileDialog^ openFileDialog1 =
 			gcnew System::Windows::Forms::OpenFileDialog();
@@ -466,11 +514,13 @@ private: System::Void loadImageButton_Click(System::Object^ sender, System::Even
 		if (openFileDialog1->ShowDialog() ==
 			System::Windows::Forms::DialogResult::OK)
 		{
-			pictureIn->Image =
-				System::Drawing::Image::FromFile(openFileDialog1->FileName);
+			pictureIn->Image = System::Drawing::Image::FromFile(openFileDialog1->FileName);
 
 			int W = 400;
 			int H = 400;
+			inputImage->width = W;
+			inputImage->height = H;
+
 
 			System::Drawing::Bitmap^ scaled =
 				gcnew System::Drawing::Bitmap(W, H);
@@ -487,6 +537,8 @@ private: System::Void loadImageButton_Click(System::Object^ sender, System::Even
 
 			delete g;
 
+
+			int* data = new int[W * H];
 			for (int row = 0; row < H; row++)
 			{
 				for (int col = 0; col < W; col++)
@@ -495,10 +547,16 @@ private: System::Void loadImageButton_Click(System::Object^ sender, System::Even
 
 					int gray = (int)(0.299 * c.R + 0.587 * c.G + 0.114 * c.B);
 
-					inputImage[row * W + col] = gray;
+					data[row * W + col] = gray;
 				}
 			}
 
+			if (inputImage->data != nullptr)
+			{
+				delete inputImage->data;
+				inputImage->data = nullptr;
+			}
+			inputImage->data = data;
 			delete scaled;
 		}
 	}
@@ -516,40 +574,65 @@ private: System::Void moveMaskButton_Click(System::Object^ sender, System::Event
 		mask[i] = System::Convert::ToInt32(tokens[i]);
 	}
 
-	int *outPicture;
-	int outRowCount = 398; //BU HESAPLAMALAR OTOMATIK YAPILMALI
-	int outColCount = 398;
+	ImageProcess img(inputImage);
+	int* outPictureData = img.MoveMask_OneChannel(mask, 3,3);
 
-//DRAW THE OUTPUT PICTURE
-	System::Drawing::Bitmap^ bmp =
-		gcnew System::Drawing::Bitmap(
-			outColCount,
-			outRowCount,
-			System::Drawing::Imaging::PixelFormat::Format24bppRgb
-		);
+	int w = inputImage->width - 2;
+	int h = inputImage->height - 2;
 
-	for (int row = 0; row < outRowCount; row++)
+	System::Drawing::Bitmap^ bmp = gcnew System::Drawing::Bitmap(w, h, System::Drawing::Imaging::PixelFormat::Format24bppRgb);
+
+	for (int row = 0; row < h; row++)
 	{
-		for (int col = 0; col < outColCount; col++)
+		for (int col = 0; col < w; col++)
 		{
+			int pixel = outPictureData[row * w + col];
 
-			int gray = abs(outPicture[row * outColCount + col]);
-			if (gray > 255) gray = 255;
+			if (pixel > 255) pixel = 255;
+			if (pixel < 0) pixel = 0;
 
 			System::Drawing::Color c =
-				System::Drawing::Color::FromArgb(gray, gray, gray);
+				System::Drawing::Color::FromArgb(pixel, pixel, pixel);
 
-			bmp->SetPixel(col, row, c); 
-			
+			bmp->SetPixel(col, row, c);
 		}
 	}
 
-	pictureOut->SizeMode =
-		System::Windows::Forms::PictureBoxSizeMode::Normal;
-
 	pictureOut->Image = bmp;
-
 }
+
+private: void DrawOnNewWindow(ImageMatris* outPicture, System::String^ text)
+	   {
+		   System::Drawing::Bitmap^ bmp = gcnew System::Drawing::Bitmap(outPicture->width, outPicture->height, System::Drawing::Imaging::PixelFormat::Format24bppRgb);
+
+		   for (int row = 0; row < outPicture->height; row++)
+		   {
+			   for (int col = 0; col < outPicture->width; col++)
+			   {
+				   int pixel = outPicture->data[row * outPicture->width + col];
+				   if (pixel > 255) pixel = 255;
+
+				   System::Drawing::Color c =
+					   System::Drawing::Color::FromArgb(pixel, pixel, pixel);
+
+				   bmp->SetPixel(col, row, c);
+			   }
+		   }
+
+		   Form^ imgForm = gcnew Form();
+		   imgForm->Text = text;
+		   imgForm->Width = 400 + 20;
+		   imgForm->Height = 400 + 40;
+
+		   PictureBox^ pb = gcnew PictureBox();
+		   pb->Dock = DockStyle::Fill;
+		   pb->SizeMode = PictureBoxSizeMode::StretchImage;
+		   pb->Image = bmp;
+
+		   imgForm->Controls->Add(pb);
+		   imgForm->Show();
+
+	   }
 
 private: System::Void applyGradientButton_Click(System::Object^ sender, System::EventArgs^ e) {
 	int mask_X[9];
@@ -572,11 +655,21 @@ private: System::Void applyGradientButton_Click(System::Object^ sender, System::
 	for (int i = 0; i < 9 && i < tokens_y->Length; i++)
 		mask_Y[i] = System::Convert::ToInt32(tokens_y[i]);
 
-	ImageProcess img(inputImage, 400, 400);
-	ImageMatris* outPictureBin = img.FindGradiant(mask_X, mask_Y); //gradyantý direkt binary olarak alýyor.
-	ImageMatris* outPictureHough = img.HoughLineSpace(outPictureBin);
-	ImageMatris* outPicture = img.LinesImage(outPictureHough,398,398);
+	ImageProcess img(inputImage);
 
+	ImageMatris* outPictureGradient = img.FindGradiant(mask_X, mask_Y); //gradyantý direkt binary olarak alýyor.
+	ImageMatris* outPictureBin = img.BinaryImage(outPictureGradient, Convert::ToInt32(textBox1->Text));
+	ImageMatris* outPictureHough = img.HoughLineSpace(outPictureBin);
+	ImageMatris* outPicture = img.LinesImage(outPictureHough,outPictureBin->width, outPictureBin->height, Convert::ToInt32(textBox2->Text));
+
+    //DrawOnNewWindow(inputImage,"Gray Scale");
+    DrawOnNewWindow(outPictureGradient, "Gradient (from gradiant)");
+    DrawOnNewWindow(outPictureBin, "Binary Edge Image (from gradiant)");
+    //DrawOnNewWindow(outPictureHough,"Hough line space");
+	//DrawOnNewWindow(outPicture,"Output Image");
+    
+
+	/*
 	//DRAW THE OUTPUT PICTURE
 	System::Drawing::Bitmap^ bmp =gcnew System::Drawing::Bitmap(outPicture->width, outPicture->height,System::Drawing::Imaging::PixelFormat::Format24bppRgb);
 
@@ -595,7 +688,28 @@ private: System::Void applyGradientButton_Click(System::Object^ sender, System::
 	}
 
 	pictureOut->Image = bmp;
+*/
 
+	Bitmap^ bmp = gcnew Bitmap(400, 400);
+	Graphics^ g = Graphics::FromImage(bmp);
+	g->InterpolationMode = System::Drawing::Drawing2D::InterpolationMode::HighQualityBicubic;
+	g->DrawImage(pictureIn->Image, 0, 0, 400, 400);
+	delete g;
+
+	Pen^ pen = gcnew Pen(Color::Red, 1);
+
+	for (int y = 0; y < outPicture->height; y++)
+		for (int x = 0; x < outPicture->width; x++)
+			if (outPicture->data[y * outPicture->width + x] == 255)
+				bmp->SetPixel(x, y, Color::Red);
+
+
+	pictureOut->Image = bmp;
+
+	//delete outPictureGradient;
+	//delete outPictureBin;
+	//delete outPictureHough;
+	//delete outPicture;
 }
 private: System::Void applyCannyButton_Click(System::Object^ sender, System::EventArgs^ e) {
 

@@ -4,9 +4,17 @@ struct ImageMatris {
 	int* data;
 };
 
-class ImageProcess {
+struct DoubleTresholdValues {
+	int thigh;
+	int tlow;
+};
+
+class ImageProcessLines {
 	ImageMatris *inputImage;
 
+//ISSUE3 lines cizdirirken istenen sayida cizdirmeli
+//ISSUE4 binary image olusurken otomatik esik kullanilmali (histogram gibi)
+//ISSUE5 border problemi baska sekilde de cozulebilir: 0 aliriz erisilemeyen yerleri
 public:
 	void empty(int* data, int size)
 	{
@@ -14,7 +22,7 @@ public:
 			data[i] = 0;
 	}
 
-	ImageProcess(ImageMatris* inpImg)
+	ImageProcessLines(ImageMatris* inpImg)
 	{
 		inputImage = inpImg;
 	}
@@ -37,10 +45,7 @@ public:
 					for (int a = 0; a < M_WIDTH; a++)
 						sum += inputImage->data[(c + a) + (r + i) * inputImage->width] * Mask[(2 - a) + (2 * M_WIDTH) - i * M_WIDTH];
 				//FLIPPING THE MASK HERE, (CONVULATION RULES)
-				//Mask[(2 - a) + (2 * M_WIDTH) - i * M_WIDTH];
 
-				//if (sum < 0) sum = 0;
-				//if (sum > 255) sum = 255;
 				outPicture[c + r * (outColCount)] = sum;
 			}
 		}
@@ -48,6 +53,7 @@ public:
 		return outPicture;
 	}
 
+	//GRADIANT
 	ImageMatris* FindGradiant(int* MaskX, int* MaskY)
 	{
 		ImageMatris* outputImage = new ImageMatris();
@@ -90,7 +96,6 @@ public:
 
 		return outputImage;
 	}
-
 	ImageMatris* BinaryImage(ImageMatris* inputImage, int treshold)
 	{
 		ImageMatris *outputImage = new ImageMatris();
@@ -112,7 +117,6 @@ public:
 		outputImage->data = data;
 		return outputImage;
 	}
-
 	ImageMatris* HoughLineSpace(ImageMatris* binaryImage)
 	{
 		//SOL EN ALT KÖÞEYÝ (0,0) OLARAK REFERANS ALDIM
@@ -150,7 +154,6 @@ public:
 		return outputImage;
 
 	}
-
 	ImageMatris* LinesImage(ImageMatris* houghImage, int realWidth, int realHeight, int treshold)
 	{
 		ImageMatris* outputImage = new ImageMatris();
@@ -205,4 +208,180 @@ public:
 
 	}
 
+	//CANNY
+	ImageMatris* NonMaximumSuperession1(int* MaskX, int* MaskY)
+	{
+		ImageMatris* outputImage = new ImageMatris();
+
+		outputImage->width = inputImage->width - 2;
+		outputImage->height = inputImage->height - 2;
+
+		int* outPicture_X = MoveMask_OneChannel(MaskX, 3, 3);
+		int* outPicture_Y = MoveMask_OneChannel(MaskY, 3, 3);
+
+		int* data = new int[outputImage->width * outputImage->height];
+		int* out = new int[outputImage->width * outputImage->height];
+		empty(out, outputImage->width * outputImage->height);
+
+		//Find the magnitudes and fill the data
+		for (int row = 0; row < outputImage->height; row++)
+		{
+			for (int col = 0; col < outputImage->width; col++)
+			{
+				int gx = outPicture_X[row * outputImage->width + col];
+				int gy = outPicture_Y[row * outputImage->width + col];
+
+				int magnitude = sqrt(gx * gx + gy * gy);
+
+				if (magnitude < 0)
+					magnitude = 0;
+				if (magnitude > 255)
+					magnitude = 255;
+
+				data[row * outputImage->width + col] = magnitude;
+			}
+		}
+
+		//Apply non-maximum supression and eliminate 
+		for (int row = 1; row < outputImage->height -1; row++)
+		{
+			for (int col = 1; col < outputImage->width -1; col++)
+			{
+				int gx = outPicture_X[row * outputImage->width + col];
+				int gy = outPicture_Y[row * outputImage->width + col];
+
+				int magnitude = sqrt(gx * gx + gy * gy);
+
+				double angle = atan2(gy, gx) * 180.0 / 3.14159265;
+				if (angle < 0)
+					angle += 180;
+				int direction;
+				int n1Mag, n2Mag;
+
+				//sag, sol 0
+				if ((angle >= 0 && angle < 22.5) || (angle >= 157.5))
+				{
+					n1Mag = data[row * outputImage->width + col - 1];
+					n2Mag = data[row * outputImage->width + col + 1];
+				}
+
+                //sag ust, sol alt 45
+				else if (angle < 67.5)
+				{
+					n1Mag = data[(row - 1) *outputImage->width + col + 1];
+					n2Mag = data[(row + 1) *outputImage->width + col - 1];
+				}
+
+				//ust, alt 90
+				else if (angle < 112.5)
+				{
+					n1Mag = data[(row - 1) * outputImage->width + col];
+					n2Mag = data[(row + 1) * outputImage->width + col];
+				}
+
+				//sol ust, sag alt, 135
+				else
+				{
+					n1Mag = data[(row - 1) * outputImage->width + col - 1];
+					n2Mag = data[(row + 1) * outputImage->width + col + 1];
+				}
+
+				if (data[row * outputImage->width + col] >= n1Mag && data[row * outputImage->width + col] >= n2Mag)
+					out[row * outputImage->width + col] = data[row * outputImage->width + col];
+				else
+					out[row * outputImage->width + col] = 0;
+			}
+		}
+
+		outputImage->data = out;
+
+		delete[] outPicture_X;
+		delete[] outPicture_Y;
+
+		return outputImage;
+	}
+	DoubleTresholdValues DoubleTresholding(ImageMatris* inputImage)
+	{
+		//#ISSUE1 double treshold neye gore yapilmai?
+		int hist[256] = { 0 };
+		int total = inputImage->width * inputImage->height;
+
+		int nonZeroCount = 0;
+
+		// Histogram (0 disinda)
+		for (int i = 0; i < total; i++)
+		{
+			int pixel = inputImage->data[i];
+			hist[pixel]++;
+
+			if (pixel > 0)
+				nonZeroCount++;
+		}
+
+		DoubleTresholdValues values;
+		values.tlow = 0;
+		values.thigh = 0;
+
+		// Hic kenar yoksa
+		if (nonZeroCount == 0)
+			return values;
+
+		// T_high: non-zero piksellerin ust %10'u
+		int targetHigh = (int)(nonZeroCount * 0.40);
+		if (targetHigh < 1)
+			targetHigh = 1;
+
+		int sum = 0;
+		for (int i = 255; i >= 1; i--)
+		{
+			sum += hist[i];
+			if (sum >= targetHigh)
+			{
+				values.thigh = i;
+				break;
+			}
+		}
+
+		// T_low: T_high'in %40'i
+		values.tlow = (int)(0.5 * values.thigh);
+
+		return values;
+	}
+	ImageMatris* HysteriesTresold(ImageMatris* inputImage)
+	{
+		DoubleTresholdValues values = DoubleTresholding(inputImage);
+
+		ImageMatris* outputImage = new ImageMatris();
+		outputImage->height = inputImage->height;
+		outputImage->width = inputImage->width;
+
+		int* data = new int[inputImage->width * inputImage->height];
+		empty(data, inputImage->width * inputImage->height);
+
+		for (int row = 1; row < inputImage->height - 1; row++)
+		{
+			for (int col = 1; col < inputImage->width - 1; col++)
+			{   //%100 edge
+				if (inputImage->data[row * inputImage->width + col] >= values.thigh) 
+				{
+					data[row * inputImage->width + col] = inputImage->data[row * inputImage->width + col];
+				}
+				//look for 8 neighbors
+				else if (inputImage->data[row * inputImage->width + col] < values.tlow)
+				{
+					//#ISSUE2 Hysteries treshold'da 8 farkli yon mu 4 farkli yon mu kontrol edilmeli?
+					int up = inputImage->data[(row - 1) * inputImage->width + col];
+					int down = inputImage->data[(row + 1) * inputImage->width + col];
+					int left = inputImage->data[row * inputImage->width + (col - 1)];
+					int right = inputImage->data[row * inputImage->width + (col + 1)];
+
+					if (up > values.thigh || down > values.thigh || left > values.thigh || right > values.thigh)
+						data[row * inputImage->width + col] = inputImage->data[row * inputImage->width + col];
+				}
+			}
+		}
+		
+		outputImage->data = data;
+		return outputImage;
+	}
 };

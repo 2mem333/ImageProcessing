@@ -11,16 +11,23 @@ struct TensorMatris {
 	int* data;
 };
 
+struct MaskMatris {
+	int* data;
+	int len;
+};
 
 struct DoubleTresholdValues {
 	int thigh;
 	int tlow;
 };
 
-class ImageProcessLines {
-	ImageMatris *inputImage;
+class ImageProcess {
 
-//ISSUE3 lines cizdirirken istenen sayida cizdirmeli
+private:
+	//LOOKUP TABLES
+	double cosTable[360];
+	double sinTable[360];
+
 //ISSUE4 binary image olusurken otomatik esik kullanilmali (histogram gibi)
 //ISSUE5 border problemi baska sekilde de cozulebilir: 0 aliriz erisilemeyen yerleri
 public:
@@ -30,16 +37,21 @@ public:
 			data[i] = 0;
 	}
 
-	ImageProcessLines(ImageMatris* inpImg)
+	ImageProcess()
 	{
-		inputImage = inpImg;
+		for (int t = 0; t < 360; t++)
+		{
+			double rad = t * 3.14159265 / 180.0;
+			cosTable[t] = cos(rad);
+			sinTable[t] = sin(rad);
+		}
 	}
-
-	int* MoveMask_OneChannel(int* Mask, int M_HEIGHT, int M_WIDTH)
+	int* MoveMask_OneChannel(ImageMatris* inputImage, MaskMatris *mask)
 	{
+		int offset = mask->len/2*2;
 		//FIXING THE BORDER PROBLEM.
-		int outRowCount = inputImage->height - 2;
-		int outColCount = inputImage->width - 2;
+		int outRowCount = inputImage->height - offset;
+		int outColCount = inputImage->width - offset;
 
 		int* outPicture = new int[outRowCount * outColCount];
 
@@ -49,11 +61,10 @@ public:
 			for (int c = 0; c < outColCount; c++)
 			{
 				int sum = 0;
-				for (int i = 0; i < M_HEIGHT; i++)
-					for (int a = 0; a < M_WIDTH; a++)
-						sum += inputImage->data[(c + a) + (r + i) * inputImage->width] * Mask[(2 - a) + (2 * M_WIDTH) - i * M_WIDTH];
+				for (int i = 0; i < mask->len; i++)
+					for (int a = 0; a < mask->len; a++)
+						sum += inputImage->data[(c + a) + (r + i) * inputImage->width] * mask->data[(offset - a) + (offset * mask->len) - i * mask->len];
 				//FLIPPING THE MASK HERE, (CONVULATION RULES)
-
 				outPicture[c + r * (outColCount)] = sum;
 			}
 		}
@@ -61,17 +72,47 @@ public:
 		return outPicture;
 	}
 
+	ImageMatris* GaussianBlur(ImageMatris* inputImage, int derece = 2)
+	{
+		int gaussian1[9] = { 0,1,0,1,4,1,0,1,0 };
+		int gaussian2[9] = { 1,2,1,2,4,2,1,2,1 };
+
+		MaskMatris* GaussianMask = new MaskMatris();
+		GaussianMask->len = 3;
+
+		if(derece == 2)
+		GaussianMask->data = gaussian2;
+		else
+		GaussianMask->data = gaussian1;
+
+		int offset = 2;
+		ImageMatris* outputImage = new ImageMatris();
+		outputImage->width = inputImage->width - offset;
+		outputImage->height = inputImage->height - offset;
+
+		int* outPictureData = MoveMask_OneChannel(inputImage, GaussianMask);
+		for (int row = 0; row < outputImage->height; row++)
+			for (int col = 0; col < outputImage->width; col++)
+				outPictureData[row * outputImage->width + col] /= 8* derece;
+
+		outputImage->data = outPictureData;
+		delete GaussianMask;
+
+		return outputImage;
+	}
+
+	//----------DEDECTING EDGES/Finding Binary-----------------
 	//GRADIANT
-	ImageMatris* FindGradiant(int* MaskX, int* MaskY)
+	ImageMatris* FindGradiant(ImageMatris* inpImg, MaskMatris* MaskX, MaskMatris* MaskY)
 	{
 		ImageMatris* outputImage = new ImageMatris();
 
-		//bunlarýn hesaplamasý sonra ayrýntýlý otomatik yapýlacak, border probleminden kaçýnýyoruz
-		outputImage->width = inputImage->width-2;
-		outputImage->height = inputImage->height-2;
+		int offset = MaskX->len / 2 * 2;
+		outputImage->width = inpImg->width- offset;
+		outputImage->height = inpImg->height- offset;
 
-		int* outPicture_X = MoveMask_OneChannel(MaskX, 3, 3);
-		int* outPicture_Y = MoveMask_OneChannel(MaskY, 3, 3);
+		int* outPicture_X = MoveMask_OneChannel(inpImg, MaskX);
+		int* outPicture_Y = MoveMask_OneChannel(inpImg, MaskY);
 
 		int* data = new int[outputImage->width * outputImage->height];
 
@@ -125,107 +166,18 @@ public:
 		outputImage->data = data;
 		return outputImage;
 	}
-	ImageMatris* HoughLineSpace(ImageMatris* binaryImage)
-	{
-		//SOL EN ALT KÖÞEYÝ (0,0) OLARAK REFERANS ALDIM
-		//x.sin0 - y.cos0 + p = 0
-
-		ImageMatris* outputImage = new ImageMatris();
-
-		int Pmax = (int)sqrt(binaryImage->width * binaryImage->width + binaryImage->height * binaryImage->height); //p'nin maksimum buyukluk kosegen kadar
-		int rowCount = 2 * Pmax + 1; //0'i da dahil et.
-
-		outputImage->height = rowCount;
-		outputImage->width = 180;
-
-		int* data = new int[outputImage->height * outputImage->width];
-		empty(data, outputImage->width * outputImage->height);
-
-		for (int row = 0; row < binaryImage->height; row++)
-		{
-			for (int col = 0; col < binaryImage->width; col++)
-			{
-				if (binaryImage->data[row * binaryImage->width + col] == 0) //binary pixelleri al
-					continue;
-
-				for (int teta = 0; teta < 180; teta++) //teta açýsý sýnýrlý oldu
-				{
-					double rad = teta * 3.14159265 / 180.0;
-					int p = (int)(col * cos(rad) + row * sin(rad));
-					int pIndeks = p + Pmax;
-
-					data[pIndeks * 180 + teta]++;
-				}
-			}
-		}
-		outputImage->data = data;
-		return outputImage;
-
-	}
-	ImageMatris* LinesImage(ImageMatris* houghImage, int realWidth, int realHeight, int treshold)
-	{
-		ImageMatris* outputImage = new ImageMatris();
-
-		outputImage->width = realWidth;
-		outputImage->height = realHeight;
-
-		int* data = new int[outputImage->height * outputImage->width];
-		empty(data, outputImage->width * outputImage->height);
-
-		int Pmax = (int)sqrt(realWidth * realWidth + realHeight * realHeight); //p'nin maksimum buyukluk kosegen kadar
-
-		for (int p = 0; p < houghImage->height; p++)
-		{
-			for (int teta = 0; teta < houghImage->width; teta++)
-			{
-				//belli bir esikten daha fazla oy alinmis mi diye kontrol etmek gerek
-				if (houghImage->data[p * houghImage->width + teta] < treshold) //buradaki deðer neye göre belirlenecek?
-					continue;
-
-				double rad = teta * 3.14159265 / 180.0;
-				double c = cos(rad);
-				double s = sin(rad);
-
-				int New_p = p - Pmax; //eski haline donusturuyoruz.
-				if (abs(s) > 0.0001)
-				{
-					for (int x = 0; x < outputImage->width; x++)
-					{
-						int y = (int)((New_p - x * c) / s);
-
-						if (y >= 0 && y < outputImage->height)
-							data[y * outputImage->width + x] = 255;
-					}
-				}
-				else
-				{
-					for (int y = 0; y < outputImage->height; y++)
-					{
-						int x = (int)((New_p - y * s) / c);
-
-						if (x >= 0 && x < outputImage->width)
-							data[y * outputImage->width + x] = 255;
-					}
-				}
-
-			}
-		}
-
-		outputImage->data = data;
-		return outputImage;
-
-	}
 
 	//CANNY
-	ImageMatris* NonMaximumSuperession1(int* MaskX, int* MaskY)
+	ImageMatris* NonMaximumSuperession1(ImageMatris* inputImage, MaskMatris* MaskX, MaskMatris* MaskY)
 	{
 		ImageMatris* outputImage = new ImageMatris();
 
-		outputImage->width = inputImage->width - 2;
-		outputImage->height = inputImage->height - 2;
+		int offset = MaskX->len / 2 * 2;
+		outputImage->width = inputImage->width - offset;
+		outputImage->height = inputImage->height - offset;
 
-		int* outPicture_X = MoveMask_OneChannel(MaskX, 3, 3);
-		int* outPicture_Y = MoveMask_OneChannel(MaskY, 3, 3);
+		int* outPicture_X = MoveMask_OneChannel(inputImage, MaskX);
+		int* outPicture_Y = MoveMask_OneChannel(inputImage, MaskY);
 
 		int* data = new int[outputImage->width * outputImage->height];
 		int* out = new int[outputImage->width * outputImage->height];
@@ -394,15 +346,22 @@ public:
 	}
 
 
-	TensorMatris* HoughCircleSpace(ImageMatris* binaryImage, int r = 0)
+	//----------DEDECTING LINES----------------------------
+	ImageMatris* HoughLineSpace(ImageMatris* binaryImage)
 	{
-		TensorMatris* tensorOut = new TensorMatris();
-		tensorOut->xlen = binaryImage->width;
-		tensorOut->ylen = binaryImage->height;
-		tensorOut->zlen = 20; 
+		//SOL EN ALT KÖÞEYÝ (0,0) OLARAK REFERANS ALDIM
+		//x.sin0 - y.cos0 + p = 0
 
-		int* data = new int[tensorOut->xlen * tensorOut->ylen * tensorOut->zlen];
-		empty(data, tensorOut->xlen * tensorOut->ylen * tensorOut->zlen);
+		ImageMatris* outputImage = new ImageMatris();
+
+		int Pmax = (int)sqrt(binaryImage->width * binaryImage->width + binaryImage->height * binaryImage->height); //p'nin maksimum buyukluk kosegen kadar
+		int rowCount = 2 * Pmax + 1; //0'i da dahil et.
+
+		outputImage->height = rowCount;
+		outputImage->width = 180;
+
+		int* data = new int[outputImage->height * outputImage->width];
+		empty(data, outputImage->width * outputImage->height);
 
 		for (int row = 0; row < binaryImage->height; row++)
 		{
@@ -410,30 +369,132 @@ public:
 			{
 				if (binaryImage->data[row * binaryImage->width + col] == 0) //binary pixelleri al
 					continue;
-				
-				for (int r = 0; r < tensorOut->zlen; r++) {
-					int radius = 20 + r * 5;
 
-					for (int teta = 0; teta < 360; teta++) //teta açýsý sýnýrlý oldu
-					{
-						double rad = teta * 3.14159265 / 180.0;
+				for (int teta = 0; teta < 180; teta++) //teta açýsý sýnýrlý oldu
+				{
+					int p = (int)(col * cosTable[teta] + row * sinTable[teta]);
+					int pIndeks = p + Pmax;
 
-						int a = (int)round(col - radius * cos(rad));
-						int b = (int)round(row - radius * sin(rad));
-
-						//neden bunu uyguladýk?
-						if (a >= 0 && a < tensorOut->xlen && b >= 0 && b < tensorOut->ylen)
-							data[r * (tensorOut->xlen* tensorOut->ylen) + b * tensorOut->xlen + a] += 1;
-
-					}
+					data[pIndeks * 180 + teta]++;
 				}
 			}
 		}
-		tensorOut->data = data;
-		return tensorOut;
+		outputImage->data = data;
+		return outputImage;
+
+	}
+	ImageMatris* LinesImage(ImageMatris* houghImage, int realWidth, int realHeight, int treshold, int lineCount = 0, bool selectDesired = true)
+	{
+		ImageMatris* outputImage = new ImageMatris();
+
+		outputImage->width = realWidth;
+		outputImage->height = realHeight;
+
+		int* data = new int[outputImage->height * outputImage->width];
+		empty(data, outputImage->width * outputImage->height);
+
+		int Pmax = (int)sqrt(realWidth * realWidth + realHeight * realHeight); //p'nin maksimum buyukluk kosegen kadar
+
+		// ===== EKLEME BAÞLANGIÇ =====
+		int* best_p = new int[lineCount];
+		int* best_theta = new int[lineCount];
+		int* best_vote = new int[lineCount];
+
+		for (int i = 0; i < lineCount; i++)
+		{
+			best_p[i] = -1;
+			best_theta[i] = -1;
+			best_vote[i] = -1;
+		}
+
+		for (int p = 0; p < houghImage->height; p++)
+		{
+			for (int teta = 0; teta < houghImage->width; teta++)
+			{
+				int vote = houghImage->data[p * houghImage->width + teta];
+
+				int minIndex = 0;
+				for (int i = 1; i < lineCount; i++)
+				{
+					if (best_vote[i] < best_vote[minIndex])
+						minIndex = i;
+				}
+
+				if (vote > best_vote[minIndex])
+				{
+					best_vote[minIndex] = vote;
+					best_p[minIndex] = p;
+					best_theta[minIndex] = teta;
+				}
+			}
+		}
+		// ===== EKLEME BÝTÝÞ =====
+
+
+		for (int p = 0; p < houghImage->height; p++)
+		{
+			for (int teta = 0; teta < houghImage->width; teta++)
+			{
+				// ===== EKLEME BAÞLANGIÇ =====
+				bool selected = false;
+				for (int i = 0; i < lineCount; i++)
+				{
+					if (p == best_p[i] && teta == best_theta[i])
+					{
+						selected = true;
+						break;
+					}
+				}
+				if (!selected && selectDesired) 
+					continue;
+				// ===== EKLEME BÝTÝÞ =====
+
+				//belli bir esikten daha fazla oy alinmis mi diye kontrol etmek gerek
+				if (houghImage->data[p * houghImage->width + teta] < treshold) //buradaki deðer neye göre belirlenecek?
+					continue;
+
+				double c = cosTable[teta];
+				double s = sinTable[teta];
+
+				int New_p = p - Pmax; //eski haline donusturuyoruz.
+				if (abs(s) > 0.0001)
+				{
+					for (int x = 0; x < outputImage->width; x++)
+					{
+						int y = (int)((New_p - x * c) / s);
+
+						if (y >= 0 && y < outputImage->height)
+							data[y * outputImage->width + x] = 255;
+					}
+				}
+				else
+				{
+					for (int y = 0; y < outputImage->height; y++)
+					{
+						int x = (int)((New_p - y * s) / c);
+
+						if (x >= 0 && x < outputImage->width)
+							data[y * outputImage->width + x] = 255;
+					}
+				}
+
+			}
+		}
+
+		// ===== EKLEME =====
+		delete[] best_p;
+		delete[] best_theta;
+		delete[] best_vote;
+		// ===== EKLEME =====
+
+		outputImage->data = data;
+		return outputImage;
 	}
 
-	void HoughCircleSpace2(ImageMatris* binaryImage, int r = 0)
+	
+	//----------DEDECTING CIRCLES-------------------------
+
+	void HoughCircleSpaceOld(ImageMatris* binaryImage, int r = 0)
 	{
 		TensorMatris* tensorOut = new TensorMatris();
 		tensorOut->xlen = binaryImage->width;
@@ -453,10 +514,8 @@ public:
 
 					for (int teta = 0; teta < 360; teta++) //teta açýsý sýnýrlý oldu
 					{
-						double rad = teta * 3.14159265 / 180.0;
-
-						int a = (int)round(col - r * cos(rad));
-						int b = (int)round(row - r * sin(rad));
+						int a = (int)round(col - r * cosTable[teta]);
+						int b = (int)round(row - r * sinTable[teta]);
 
 						//neden bunu uyguladýk?
 						if (a >= 0 && a < tensorOut->xlen && b >= 0 && b < tensorOut->ylen)
@@ -489,6 +548,44 @@ public:
 
 	}
 
+	TensorMatris* HoughCircleSpace(ImageMatris* binaryImage, int r = 0)
+	{
+		TensorMatris* tensorOut = new TensorMatris();
+		tensorOut->xlen = binaryImage->width;
+		tensorOut->ylen = binaryImage->height;
+		tensorOut->zlen = 20; 
+
+		int* data = new int[tensorOut->xlen * tensorOut->ylen * tensorOut->zlen];
+		empty(data, tensorOut->xlen * tensorOut->ylen * tensorOut->zlen);
+
+		for (int row = 0; row < binaryImage->height; row++)
+		{
+			for (int col = 0; col < binaryImage->width; col++)
+			{
+				if (binaryImage->data[row * binaryImage->width + col] == 0) //binary pixelleri al
+					continue;
+				
+				for (int r = 0; r < tensorOut->zlen; r++) {
+					int radius = 20 + r * 5;
+
+					for (int teta = 0; teta < 360; teta += 5) //teta açýsý sýnýrlý oldu
+					{
+						double rad = teta * 3.14159265 / 180.0;
+
+						int a = (int)round(col - radius * cosTable[teta]);
+						int b = (int)round(row - radius * sinTable[teta]);
+
+						//neden bunu uyguladýk?
+						if (a >= 0 && a < tensorOut->xlen && b >= 0 && b < tensorOut->ylen)
+							data[r * (tensorOut->xlen* tensorOut->ylen) + b * tensorOut->xlen + a] += 1;
+
+					}
+				}
+			}
+		}
+		tensorOut->data = data;
+		return tensorOut;
+	}
 	struct CircleCandidate
 	{
 		int a;
@@ -497,8 +594,7 @@ public:
 		int radius;
 		int vote;
 	};
-	bool IsTooClose(const CircleCandidate& c1, const CircleCandidate& c2,
-		int centerDistThresh, int radiusThresh)
+	bool IsTooClose(const CircleCandidate& c1, const CircleCandidate& c2, int centerDistThresh, int radiusThresh)
 	{
 		int dx = c1.a - c2.a;
 		int dy = c1.b - c2.b;
@@ -507,8 +603,7 @@ public:
 		return (dx * dx + dy * dy <= centerDistThresh * centerDistThresh) &&
 			(dr <= radiusThresh);
 	}
-
-	ImageMatris* PrintTopNCirclesDistinct(TensorMatris* tensor, int topN)
+	ImageMatris* SelectNCircles(TensorMatris* tensor, int topN, int centerDistThresh, int radiusThresh)
 	{
 		CircleCandidate* best = new CircleCandidate[topN];
 		int found = 0;
@@ -525,7 +620,7 @@ public:
 				{
 					int idx = r * planeSize + b * tensor->xlen + a;
 					int vote = tensor->data[idx];
-					if (vote < 30)
+					if (vote < 1)
 						continue;
 
 					CircleCandidate cand;
@@ -539,7 +634,7 @@ public:
 					for (int i = 0; i < found; i++)
 					{
 						//degistirilebilir
-						if (IsTooClose(cand, best[i], 20, 10))
+						if (IsTooClose(cand, best[i], centerDistThresh, radiusThresh))
 						{
 							tooClose = true;
 							break;
@@ -606,12 +701,10 @@ public:
 			int cy = best[i].b;
 			int radius = best[i].radius;
 
-			for (int theta = 0; theta < 360; theta++)
+			for (int theta = 0; theta < 360; theta += 5)
 			{
-				double rad = theta * 3.14159265 / 180.0;
-
-				int x = (int)round(cx + radius * cos(rad));
-				int y = (int)round(cy + radius * sin(rad));
+				int x = (int)round(cx + radius * cosTable[theta]);
+				int y = (int)round(cy + radius * sinTable[theta]);
 
 				if (x >= 0 && x < outputImage->width &&
 					y >= 0 && y < outputImage->height)

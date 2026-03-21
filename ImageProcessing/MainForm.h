@@ -45,6 +45,10 @@ namespace ImageProcessing {
 	private: System::Windows::Forms::TextBox^ textBox2;
 	private: System::Windows::Forms::Label^ label7;
 	private: System::Windows::Forms::Label^ label8;
+	private: System::Windows::Forms::Button^ button1;
+	private: System::Windows::Forms::Label^ label9;
+	private: System::Windows::Forms::TextBox^ textBox3;
+	private: System::Windows::Forms::Button^ button2;
 
 
 	public:
@@ -121,6 +125,10 @@ namespace ImageProcessing {
 			this->textBox2 = (gcnew System::Windows::Forms::TextBox());
 			this->label7 = (gcnew System::Windows::Forms::Label());
 			this->label8 = (gcnew System::Windows::Forms::Label());
+			this->button1 = (gcnew System::Windows::Forms::Button());
+			this->label9 = (gcnew System::Windows::Forms::Label());
+			this->textBox3 = (gcnew System::Windows::Forms::TextBox());
+			this->button2 = (gcnew System::Windows::Forms::Button());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureIn))->BeginInit();
 			this->panel1->SuspendLayout();
 			this->panel3->SuspendLayout();
@@ -370,7 +378,7 @@ namespace ImageProcessing {
 			this->applyGradientButton->ForeColor = System::Drawing::Color::White;
 			this->applyGradientButton->Location = System::Drawing::Point(451, 281);
 			this->applyGradientButton->Name = L"applyGradientButton";
-			this->applyGradientButton->Size = System::Drawing::Size(167, 25);
+			this->applyGradientButton->Size = System::Drawing::Size(177, 25);
 			this->applyGradientButton->TabIndex = 45;
 			this->applyGradientButton->Text = L"Dedect Lines with Gradiant";
 			this->applyGradientButton->UseVisualStyleBackColor = false;
@@ -385,7 +393,7 @@ namespace ImageProcessing {
 			this->applyCannyButton->ForeColor = System::Drawing::Color::White;
 			this->applyCannyButton->Location = System::Drawing::Point(451, 312);
 			this->applyCannyButton->Name = L"applyCannyButton";
-			this->applyCannyButton->Size = System::Drawing::Size(167, 25);
+			this->applyCannyButton->Size = System::Drawing::Size(177, 25);
 			this->applyCannyButton->TabIndex = 46;
 			this->applyCannyButton->Text = L"Dedect Lines with Canny";
 			this->applyCannyButton->UseVisualStyleBackColor = false;
@@ -393,7 +401,7 @@ namespace ImageProcessing {
 			// 
 			// textBox1
 			// 
-			this->textBox1->Location = System::Drawing::Point(570, 378);
+			this->textBox1->Location = System::Drawing::Point(570, 421);
 			this->textBox1->Name = L"textBox1";
 			this->textBox1->Size = System::Drawing::Size(44, 20);
 			this->textBox1->TabIndex = 48;
@@ -401,7 +409,7 @@ namespace ImageProcessing {
 			// 
 			// textBox2
 			// 
-			this->textBox2->Location = System::Drawing::Point(570, 411);
+			this->textBox2->Location = System::Drawing::Point(570, 454);
 			this->textBox2->Name = L"textBox2";
 			this->textBox2->Size = System::Drawing::Size(44, 20);
 			this->textBox2->TabIndex = 49;
@@ -411,7 +419,7 @@ namespace ImageProcessing {
 			// 
 			this->label7->AutoSize = true;
 			this->label7->ForeColor = System::Drawing::SystemColors::ButtonHighlight;
-			this->label7->Location = System::Drawing::Point(452, 381);
+			this->label7->Location = System::Drawing::Point(452, 424);
 			this->label7->Name = L"label7";
 			this->label7->Size = System::Drawing::Size(112, 13);
 			this->label7->TabIndex = 50;
@@ -421,11 +429,59 @@ namespace ImageProcessing {
 			// 
 			this->label8->AutoSize = true;
 			this->label8->ForeColor = System::Drawing::SystemColors::ButtonHighlight;
-			this->label8->Location = System::Drawing::Point(463, 415);
+			this->label8->Location = System::Drawing::Point(463, 458);
 			this->label8->Name = L"label8";
 			this->label8->Size = System::Drawing::Size(101, 13);
 			this->label8->TabIndex = 51;
 			this->label8->Text = L"Lines Vote Treshold";
+			// 
+			// button1
+			// 
+			this->button1->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(58)), static_cast<System::Int32>(static_cast<System::Byte>(58)),
+				static_cast<System::Int32>(static_cast<System::Byte>(58)));
+			this->button1->FlatStyle = System::Windows::Forms::FlatStyle::Popup;
+			this->button1->Font = (gcnew System::Drawing::Font(L"Century Gothic", 7.8F));
+			this->button1->ForeColor = System::Drawing::Color::White;
+			this->button1->Location = System::Drawing::Point(453, 356);
+			this->button1->Name = L"button1";
+			this->button1->Size = System::Drawing::Size(177, 25);
+			this->button1->TabIndex = 52;
+			this->button1->Text = L"Dedect Circles with Gradiant";
+			this->button1->UseVisualStyleBackColor = false;
+			this->button1->Click += gcnew System::EventHandler(this, &MainForm::button1_Click);
+			// 
+			// label9
+			// 
+			this->label9->AutoSize = true;
+			this->label9->ForeColor = System::Drawing::SystemColors::ButtonHighlight;
+			this->label9->Location = System::Drawing::Point(463, 491);
+			this->label9->Name = L"label9";
+			this->label9->Size = System::Drawing::Size(76, 13);
+			this->label9->TabIndex = 54;
+			this->label9->Text = L"Select Desired";
+			// 
+			// textBox3
+			// 
+			this->textBox3->Location = System::Drawing::Point(570, 487);
+			this->textBox3->Name = L"textBox3";
+			this->textBox3->Size = System::Drawing::Size(44, 20);
+			this->textBox3->TabIndex = 53;
+			this->textBox3->Text = L"2";
+			// 
+			// button2
+			// 
+			this->button2->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(58)), static_cast<System::Int32>(static_cast<System::Byte>(58)),
+				static_cast<System::Int32>(static_cast<System::Byte>(58)));
+			this->button2->FlatStyle = System::Windows::Forms::FlatStyle::Popup;
+			this->button2->Font = (gcnew System::Drawing::Font(L"Century Gothic", 7.8F));
+			this->button2->ForeColor = System::Drawing::Color::White;
+			this->button2->Location = System::Drawing::Point(451, 387);
+			this->button2->Name = L"button2";
+			this->button2->Size = System::Drawing::Size(177, 25);
+			this->button2->TabIndex = 55;
+			this->button2->Text = L"Dedect Circles with Canny";
+			this->button2->UseVisualStyleBackColor = false;
+			this->button2->Click += gcnew System::EventHandler(this, &MainForm::button2_Click);
 			// 
 			// MainForm
 			// 
@@ -434,6 +490,10 @@ namespace ImageProcessing {
 			this->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(30)), static_cast<System::Int32>(static_cast<System::Byte>(30)),
 				static_cast<System::Int32>(static_cast<System::Byte>(30)));
 			this->ClientSize = System::Drawing::Size(1195, 518);
+			this->Controls->Add(this->button2);
+			this->Controls->Add(this->label9);
+			this->Controls->Add(this->textBox3);
+			this->Controls->Add(this->button1);
 			this->Controls->Add(this->label8);
 			this->Controls->Add(this->label7);
 			this->Controls->Add(this->textBox2);
@@ -705,6 +765,104 @@ private: System::Void applyCannyButton_Click(System::Object^ sender, System::Eve
 		for (int x = 0; x < outPicture->width; x++)
 			if (outPicture->data[y * outPicture->width + x] == 255)
 				bmp->SetPixel(x, y, Color::Red);
+
+
+	pictureOut->Image = bmp;
+}
+private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
+	int mask_X[9];
+	int mask_Y[9];
+
+	System::String^ text_X = inputMaskX->Text;
+	System::String^ text_Y = inputMaskY->Text;
+
+	array<System::String^>^ tokens_x =
+		text_X->Split(gcnew array<wchar_t>{' ', '\n', '\r', '\t'},
+			System::StringSplitOptions::RemoveEmptyEntries);
+
+	array<System::String^>^ tokens_y =
+		text_Y->Split(gcnew array<wchar_t>{' ', '\n', '\r', '\t'},
+			System::StringSplitOptions::RemoveEmptyEntries);
+
+	for (int i = 0; i < 9 && i < tokens_x->Length; i++)
+		mask_X[i] = System::Convert::ToInt32(tokens_x[i]);
+
+	for (int i = 0; i < 9 && i < tokens_y->Length; i++)
+		mask_Y[i] = System::Convert::ToInt32(tokens_y[i]);
+
+	ImageProcessLines img(inputImage);
+
+	//circle dedection with gradient
+	ImageMatris* outPictureGradient = img.FindGradiant(mask_X, mask_Y); //gradyantý direkt binary olarak alýyor.
+	ImageMatris* outPictureBin = img.BinaryImage(outPictureGradient, Convert::ToInt32(textBox1->Text));
+	TensorMatris* cirlchough = img.HoughCircleSpace(outPictureBin);
+	ImageMatris* outPicture = img.PrintTopNCirclesDistinct(cirlchough, System::Convert::ToInt32(textBox3->Text));
+
+	Bitmap^ bmp = gcnew Bitmap(400, 400);
+	Graphics^ g = Graphics::FromImage(bmp);
+	g->InterpolationMode = System::Drawing::Drawing2D::InterpolationMode::HighQualityBicubic;
+	g->DrawImage(pictureIn->Image, 0, 0, 400, 400);
+	delete g;
+
+	Pen^ pen = gcnew Pen(Color::Red, 1);
+
+	for (int y = 0; y < outPicture->height; y++)
+		for (int x = 0; x < outPicture->width; x++)
+			if (outPicture->data[y * outPicture->width + x] == 255) {
+				bmp->SetPixel(x, y, Color::Red);
+				bmp->SetPixel(x+1, y, Color::Red);
+				bmp->SetPixel(x, y+1, Color::Red);
+				bmp->SetPixel(x+1, y+1, Color::Red);
+			}
+
+
+	pictureOut->Image = bmp;
+}
+private: System::Void button2_Click(System::Object^ sender, System::EventArgs^ e) {
+	int mask_X[9];
+	int mask_Y[9];
+
+	System::String^ text_X = inputMaskX->Text;
+	System::String^ text_Y = inputMaskY->Text;
+
+	array<System::String^>^ tokens_x =
+		text_X->Split(gcnew array<wchar_t>{' ', '\n', '\r', '\t'},
+			System::StringSplitOptions::RemoveEmptyEntries);
+
+	array<System::String^>^ tokens_y =
+		text_Y->Split(gcnew array<wchar_t>{' ', '\n', '\r', '\t'},
+			System::StringSplitOptions::RemoveEmptyEntries);
+
+	for (int i = 0; i < 9 && i < tokens_x->Length; i++)
+		mask_X[i] = System::Convert::ToInt32(tokens_x[i]);
+
+	for (int i = 0; i < 9 && i < tokens_y->Length; i++)
+		mask_Y[i] = System::Convert::ToInt32(tokens_y[i]);
+
+	ImageProcessLines img(inputImage);
+	ImageMatris* cannyout = img.NonMaximumSuperession1(mask_X, mask_Y);
+	ImageMatris* hysteries = img.HysteriesTresold(cannyout);
+	ImageMatris* outPictureBin = img.BinaryImage(hysteries, Convert::ToInt32(textBox1->Text));
+
+	TensorMatris* cirlchough = img.HoughCircleSpace(outPictureBin);
+	ImageMatris* outPicture = img.PrintTopNCirclesDistinct(cirlchough, System::Convert::ToInt32(textBox3->Text));
+
+	Bitmap^ bmp = gcnew Bitmap(400, 400);
+	Graphics^ g = Graphics::FromImage(bmp);
+	g->InterpolationMode = System::Drawing::Drawing2D::InterpolationMode::HighQualityBicubic;
+	g->DrawImage(pictureIn->Image, 0, 0, 400, 400);
+	delete g;
+
+	Pen^ pen = gcnew Pen(Color::Red, 1);
+
+	for (int y = 0; y < outPicture->height; y++)
+		for (int x = 0; x < outPicture->width; x++)
+			if (outPicture->data[y * outPicture->width + x] == 255) {
+				bmp->SetPixel(x, y, Color::Red);
+				bmp->SetPixel(x + 1, y, Color::Red);
+				bmp->SetPixel(x, y + 1, Color::Red);
+				bmp->SetPixel(x + 1, y + 1, Color::Red);
+			}
 
 
 	pictureOut->Image = bmp;

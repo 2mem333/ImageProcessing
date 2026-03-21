@@ -4,6 +4,14 @@ struct ImageMatris {
 	int* data;
 };
 
+struct TensorMatris {
+	int xlen;
+	int ylen;
+	int zlen;
+	int* data;
+};
+
+
 struct DoubleTresholdValues {
 	int thigh;
 	int tlow;
@@ -384,4 +392,246 @@ public:
 		outputImage->data = data;
 		return outputImage;
 	}
+
+
+	TensorMatris* HoughCircleSpace(ImageMatris* binaryImage, int r = 0)
+	{
+		TensorMatris* tensorOut = new TensorMatris();
+		tensorOut->xlen = binaryImage->width;
+		tensorOut->ylen = binaryImage->height;
+		tensorOut->zlen = 20; 
+
+		int* data = new int[tensorOut->xlen * tensorOut->ylen * tensorOut->zlen];
+		empty(data, tensorOut->xlen * tensorOut->ylen * tensorOut->zlen);
+
+		for (int row = 0; row < binaryImage->height; row++)
+		{
+			for (int col = 0; col < binaryImage->width; col++)
+			{
+				if (binaryImage->data[row * binaryImage->width + col] == 0) //binary pixelleri al
+					continue;
+				
+				for (int r = 0; r < tensorOut->zlen; r++) {
+					int radius = 20 + r * 5;
+
+					for (int teta = 0; teta < 360; teta++) //teta açýsý sýnýrlý oldu
+					{
+						double rad = teta * 3.14159265 / 180.0;
+
+						int a = (int)round(col - radius * cos(rad));
+						int b = (int)round(row - radius * sin(rad));
+
+						//neden bunu uyguladýk?
+						if (a >= 0 && a < tensorOut->xlen && b >= 0 && b < tensorOut->ylen)
+							data[r * (tensorOut->xlen* tensorOut->ylen) + b * tensorOut->xlen + a] += 1;
+
+					}
+				}
+			}
+		}
+		tensorOut->data = data;
+		return tensorOut;
+	}
+
+	void HoughCircleSpace2(ImageMatris* binaryImage, int r = 0)
+	{
+		TensorMatris* tensorOut = new TensorMatris();
+		tensorOut->xlen = binaryImage->width;
+		tensorOut->ylen = binaryImage->height;
+
+		int* data = new int[tensorOut->xlen * tensorOut->ylen];
+		empty(data, tensorOut->xlen * tensorOut->ylen);
+
+		for (int row = 0; row < binaryImage->height; row++)
+		{
+			for (int col = 0; col < binaryImage->width; col++)
+			{
+				if (binaryImage->data[row * binaryImage->width + col] == 0) //binary pixelleri al
+					continue;
+
+				for (int r = 10; r < 80; r += 5) {
+
+					for (int teta = 0; teta < 360; teta++) //teta açýsý sýnýrlý oldu
+					{
+						double rad = teta * 3.14159265 / 180.0;
+
+						int a = (int)round(col - r * cos(rad));
+						int b = (int)round(row - r * sin(rad));
+
+						//neden bunu uyguladýk?
+						if (a >= 0 && a < tensorOut->xlen && b >= 0 && b < tensorOut->ylen)
+							data[ b * tensorOut->xlen + a] += 1;
+
+					}
+				}
+			}
+		}
+
+		int max = 0;
+		int maxRow = 0;
+		int maxCol = 0;
+
+		for (int row = 0; row < binaryImage->height; row++)
+		{
+			for (int col = 0; col < binaryImage->width; col++)
+			{
+				if (data[row * tensorOut->xlen + col] > max) {
+					max = data[row * tensorOut->xlen + col];
+					maxRow = row;
+					maxCol = col;
+				}
+
+			}
+		}
+
+		std::cout << "Maximum: " << max << "\n";
+		std::cout << "Indeks: " << maxCol << ", " << maxRow;
+
+	}
+
+	struct CircleCandidate
+	{
+		int a;
+		int b;
+		int rIndex;
+		int radius;
+		int vote;
+	};
+	bool IsTooClose(const CircleCandidate& c1, const CircleCandidate& c2,
+		int centerDistThresh, int radiusThresh)
+	{
+		int dx = c1.a - c2.a;
+		int dy = c1.b - c2.b;
+		int dr = abs(c1.radius - c2.radius);
+
+		return (dx * dx + dy * dy <= centerDistThresh * centerDistThresh) &&
+			(dr <= radiusThresh);
+	}
+
+	ImageMatris* PrintTopNCirclesDistinct(TensorMatris* tensor, int topN)
+	{
+		CircleCandidate* best = new CircleCandidate[topN];
+		int found = 0;
+
+		int planeSize = tensor->xlen * tensor->ylen;
+
+		for (int r = 0; r < tensor->zlen; r++)
+		{
+			int radius = 20 + r * 5;
+
+			for (int b = 0; b < tensor->ylen; b++)
+			{
+				for (int a = 0; a < tensor->xlen; a++)
+				{
+					int idx = r * planeSize + b * tensor->xlen + a;
+					int vote = tensor->data[idx];
+					if (vote < 30)
+						continue;
+
+					CircleCandidate cand;
+					cand.a = a;
+					cand.b = b;
+					cand.rIndex = r;
+					cand.radius = radius;
+					cand.vote = vote;
+
+					bool tooClose = false;
+					for (int i = 0; i < found; i++)
+					{
+						//degistirilebilir
+						if (IsTooClose(cand, best[i], 20, 10))
+						{
+							tooClose = true;
+							break;
+						}
+					}
+
+					if (tooClose)
+						continue;
+
+					if (found < topN)
+					{
+						best[found] = cand;
+						found++;
+
+						for (int i = found - 1; i > 0; i--)
+						{
+							if (best[i].vote > best[i - 1].vote)
+							{
+								CircleCandidate temp = best[i];
+								best[i] = best[i - 1];
+								best[i - 1] = temp;
+							}
+						}
+					}
+					else if (vote > best[topN - 1].vote)
+					{
+						best[topN - 1] = cand;
+
+						for (int i = topN - 1; i > 0; i--)
+						{
+							if (best[i].vote > best[i - 1].vote)
+							{
+								CircleCandidate temp = best[i];
+								best[i] = best[i - 1];
+								best[i - 1] = temp;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		std::cout << "Top " << found << " distinct circle candidates:" << std::endl;
+		for (int i = 0; i < found; i++)
+		{
+			std::cout << i + 1
+				<< ") center = (" << best[i].a << ", " << best[i].b << ")"
+				<< ", radius = " << best[i].radius
+				<< ", vote = " << best[i].vote
+				<< std::endl;
+		}
+
+		ImageMatris* outputImage = new ImageMatris();
+		outputImage->width = tensor->xlen;
+		outputImage->height = tensor->ylen;
+
+		int* data = new int[outputImage->width * outputImage->height];
+		empty(data, outputImage->width * outputImage->height);
+
+		// en iyi noktalari data üzerinde cembersel, dataya kaydet
+		for (int i = 0; i < found; i++)
+		{
+			int cx = best[i].a;
+			int cy = best[i].b;
+			int radius = best[i].radius;
+
+			for (int theta = 0; theta < 360; theta++)
+			{
+				double rad = theta * 3.14159265 / 180.0;
+
+				int x = (int)round(cx + radius * cos(rad));
+				int y = (int)round(cy + radius * sin(rad));
+
+				if (x >= 0 && x < outputImage->width &&
+					y >= 0 && y < outputImage->height)
+				{
+					data[y * outputImage->width + x] = 255;
+				}
+			}
+
+			// merkezin kendisini de iþaretle
+			if (cx >= 0 && cx < outputImage->width &&
+				cy >= 0 && cy < outputImage->height)
+			{
+				data[cy * outputImage->width + cx] = 255;
+			}
+		}
+
+		outputImage->data = data;
+		delete[] best;
+		return outputImage;
+	}
+
+
 };

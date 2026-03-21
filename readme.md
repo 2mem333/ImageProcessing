@@ -1,4 +1,4 @@
-# 🖼️ Image Processing Tool
+# Image Processing Tool
 
 A simple image processing application that demonstrates:
 - Edge detection (Gradient & Canny)
@@ -8,14 +8,14 @@ A simple image processing application that demonstrates:
 
 ---
 
-## 🚀 Features
+##  Features
 
-- 📏 Line detection using Hough Transform
-- ⚪ Circle detection with adjustable radius range
-- 🎯 Binary tresholding & auto-treshold option
-- 🧠 Gradient-based edge detection
-- 🧊 Optional Gaussian Blur
-- 🛠 Custom mask support (X, Y, Example masks)
+-  Line detection using Hough Transform
+-  Circle detection with adjustable radius range
+-  Binary tresholding & auto-treshold option
+-  Gradient-based edge detection
+-  Optional Gaussian Blur
+-  Custom mask support (X, Y, Example masks)
 
 ---
 
@@ -32,28 +32,28 @@ A simple image processing application that demonstrates:
 
 ## 🖼️ Screenshots
 
-### 🔲 Line Detection Example
+###  Line Detection Example
 <p align="center">
   <img src="https://github.com/user-attachments/assets/43d5a8b6-0336-4879-b5d0-a4d5f55fb58f" width="800"/> 
 </p>
 
 ---
 
-### ⚪ Circle Detection Example
+###  Circle Detection Example
 <p align="center">
   <img src="https://github.com/user-attachments/assets/70d35cfa-f6d1-4459-bb07-8daa4eff2243" width="800"/> 
 </p>
 
 ---
 
-### 📊 Hough Space Visualization
+###  Hough Space Visualization
 <p align="center">
   <img src="https://github.com/user-attachments/assets/2010b304-8ee8-453b-ac4d-0c9f2f076758" width="800"/>
 </p>
 
 ---
 
-## 🧩 How It Works (Short)
+##  How It Works (Short)
 
 1. Convert image to grayscale  
 2. Apply edge detection (Gradient or Canny)  

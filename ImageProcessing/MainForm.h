@@ -3,7 +3,7 @@
 #include "Utils.h"
 
 namespace ImageProcessing {
-
+	using namespace System::Windows::Forms::DataVisualization::Charting;
 	using namespace System;
 	using namespace System::ComponentModel;
 	using namespace System::Collections;
@@ -79,11 +79,21 @@ namespace ImageProcessing {
 	private: System::Windows::Forms::Label^ label20;
 	private: System::Windows::Forms::Panel^ panel16;
 	private: System::Windows::Forms::Panel^ panel17;
-	private: System::Windows::Forms::CheckBox^ checkBox6;
-	private: System::Windows::Forms::Label^ label16;
+
+
 	private: System::Windows::Forms::TextBox^ textBox5;
 	private: System::Windows::Forms::Label^ label21;
 	private: System::Windows::Forms::TextBox^ textBox4;
+
+	private: System::Windows::Forms::Button^ button3;
+	private: System::Windows::Forms::Label^ label16;
+	private: System::Windows::Forms::CheckBox^ checkBox6;
+
+
+
+
+
+
 
 
 	public:
@@ -194,8 +204,9 @@ namespace ImageProcessing {
 			this->label20 = (gcnew System::Windows::Forms::Label());
 			this->panel16 = (gcnew System::Windows::Forms::Panel());
 			this->panel17 = (gcnew System::Windows::Forms::Panel());
-			this->checkBox6 = (gcnew System::Windows::Forms::CheckBox());
+			this->button3 = (gcnew System::Windows::Forms::Button());
 			this->label16 = (gcnew System::Windows::Forms::Label());
+			this->checkBox6 = (gcnew System::Windows::Forms::CheckBox());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureIn))->BeginInit();
 			this->panel1->SuspendLayout();
 			this->panel3->SuspendLayout();
@@ -551,7 +562,7 @@ namespace ImageProcessing {
 			this->textBox3->Name = L"textBox3";
 			this->textBox3->Size = System::Drawing::Size(23, 20);
 			this->textBox3->TabIndex = 53;
-			this->textBox3->Text = L"2";
+			this->textBox3->Text = L"3";
 			// 
 			// button2
 			// 
@@ -697,7 +708,7 @@ namespace ImageProcessing {
 			this->textBox4->Name = L"textBox4";
 			this->textBox4->Size = System::Drawing::Size(23, 20);
 			this->textBox4->TabIndex = 61;
-			this->textBox4->Text = L"20";
+			this->textBox4->Text = L"30";
 			// 
 			// checkBox2
 			// 
@@ -891,14 +902,17 @@ namespace ImageProcessing {
 			this->panel17->Size = System::Drawing::Size(289, 135);
 			this->panel17->TabIndex = 61;
 			// 
-			// checkBox6
+			// button3
 			// 
-			this->checkBox6->AutoSize = true;
-			this->checkBox6->Location = System::Drawing::Point(852, 466);
-			this->checkBox6->Name = L"checkBox6";
-			this->checkBox6->Size = System::Drawing::Size(15, 14);
-			this->checkBox6->TabIndex = 69;
-			this->checkBox6->UseVisualStyleBackColor = true;
+			this->button3->FlatStyle = System::Windows::Forms::FlatStyle::Popup;
+			this->button3->ForeColor = System::Drawing::SystemColors::ControlLightLight;
+			this->button3->Location = System::Drawing::Point(962, 465);
+			this->button3->Name = L"button3";
+			this->button3->Size = System::Drawing::Size(75, 23);
+			this->button3->TabIndex = 71;
+			this->button3->Text = L"Histogram";
+			this->button3->UseVisualStyleBackColor = true;
+			this->button3->Click += gcnew System::EventHandler(this, &MainForm::button3_Click);
 			// 
 			// label16
 			// 
@@ -908,9 +922,18 @@ namespace ImageProcessing {
 			this->label16->ForeColor = System::Drawing::SystemColors::ButtonHighlight;
 			this->label16->Location = System::Drawing::Point(750, 464);
 			this->label16->Name = L"label16";
-			this->label16->Size = System::Drawing::Size(96, 16);
+			this->label16->Size = System::Drawing::Size(42, 16);
 			this->label16->TabIndex = 68;
-			this->label16->Text = L"Details for canny";
+			this->label16->Text = L"Details";
+			// 
+			// checkBox6
+			// 
+			this->checkBox6->AutoSize = true;
+			this->checkBox6->Location = System::Drawing::Point(798, 465);
+			this->checkBox6->Name = L"checkBox6";
+			this->checkBox6->Size = System::Drawing::Size(15, 14);
+			this->checkBox6->TabIndex = 69;
+			this->checkBox6->UseVisualStyleBackColor = true;
 			// 
 			// MainForm
 			// 
@@ -918,7 +941,8 @@ namespace ImageProcessing {
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(30)), static_cast<System::Int32>(static_cast<System::Byte>(30)),
 				static_cast<System::Int32>(static_cast<System::Byte>(30)));
-			this->ClientSize = System::Drawing::Size(1195, 484);
+			this->ClientSize = System::Drawing::Size(1169, 484);
+			this->Controls->Add(this->button3);
 			this->Controls->Add(this->checkBox6);
 			this->Controls->Add(this->label16);
 			this->Controls->Add(this->checkBox5);
@@ -1179,11 +1203,13 @@ private: System::Void applyGradientButton_Click(System::Object^ sender, System::
 	pictureOut->Image = bmp;
 
 	if (checkBox3->Checked)
-		DrawOnNewWindow(inputImage, "Starting");
+		DrawOnNewWindow(startImage, "Starting");
 	if (checkBox4->Checked)
 		DrawOnNewWindow(outPictureBin, "Binary Edge Image (from gradiant)");
 	if (checkBox5->Checked)
 		DrawOnNewWindow(outPictureHough, "Hough line space (from gradiant");
+	if (checkBox6->Checked)
+		DrawOnNewWindow(outPictureGradient, "gradiants (from gradiant)");
 
 	delete[] outPictureGradient;
 	delete[] outPictureBin;
@@ -1226,9 +1252,9 @@ private: System::Void applyCannyButton_Click(System::Object^ sender, System::Eve
 	if (checkBox3->Checked)
 		DrawOnNewWindow(inputImage, "Starting");
 	if (checkBox4->Checked)
-		DrawOnNewWindow(outPictureBin, "Binary Edge Image (from gradiant)");
+		DrawOnNewWindow(outPictureBin, "Binary Edge Image (from canny)");
 	if (checkBox5->Checked)
-		DrawOnNewWindow(outPictureHough, "Hough line space (from gradiant");
+		DrawOnNewWindow(outPictureHough, "Hough line space (from canny");
 	if (checkBox6->Checked)
 	{
 		DrawOnNewWindow(cannyout, "NonMaximumSupression");
@@ -1267,10 +1293,10 @@ private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e
 	for (int y = 0; y < outPicture->height; y++)
 		for (int x = 0; x < outPicture->width; x++)
 			if (outPicture->data[y * outPicture->width + x] == 255) {
-				bmp->SetPixel(x, y, Color::Red);
-				bmp->SetPixel(x+1, y, Color::Red);
-				bmp->SetPixel(x, y+1, Color::Red);
-				bmp->SetPixel(x+1, y+1, Color::Red);
+				bmp->SetPixel(x+2, y+2, Color::Red);
+				bmp->SetPixel(x + 3, y + 3, Color::Red);
+				bmp->SetPixel(x + 3, y + 2, Color::Red);
+				bmp->SetPixel(x + 2, y + 3, Color::Red);
 			}
 
 	if (checkBox3->Checked)
@@ -1310,10 +1336,10 @@ private: System::Void button2_Click(System::Object^ sender, System::EventArgs^ e
 	for (int y = 0; y < outPicture->height; y++)
 		for (int x = 0; x < outPicture->width; x++)
 			if (outPicture->data[y * outPicture->width + x] == 255) {
-				bmp->SetPixel(x, y, Color::Red);
-				bmp->SetPixel(x + 1, y, Color::Red);
-				bmp->SetPixel(x, y + 1, Color::Red);
-				bmp->SetPixel(x + 1, y + 1, Color::Red);
+				bmp->SetPixel(x + 2, y + 2, Color::Red);
+				bmp->SetPixel(x + 3, y + 3, Color::Red);
+				bmp->SetPixel(x + 3, y + 2, Color::Red);
+				bmp->SetPixel(x + 2, y + 3, Color::Red);
 			}
 
 
@@ -1328,6 +1354,59 @@ private: System::Void button2_Click(System::Object^ sender, System::EventArgs^ e
 		DrawOnNewWindow(cannyout, "NonMaximumSupression");
 		DrawOnNewWindow(hysteries, "Hysteries Applied");
 	}
+}
+
+	   void ShowHistogramWindow(int* hist, int histSize)
+	   {
+		   using namespace System::Windows::Forms;
+		   using namespace System::Windows::Forms::DataVisualization::Charting;
+		   using namespace System::Drawing;
+
+		   Form^ frm = gcnew Form();
+		   frm->Text = "Gradient Histogram";
+		   frm->Size = Drawing::Size(900, 500);
+
+		   Chart^ chart = gcnew Chart();
+		   chart->Dock = DockStyle::Fill;
+
+		   ChartArea^ area = gcnew ChartArea("MainArea");
+		   area->AxisX->Title = "Gradient Magnitude";
+		   area->AxisY->Title = "Pixel Count";
+		   area->AxisX->Minimum = 0;
+		   area->AxisX->Maximum = histSize - 1;
+		   area->AxisY->Minimum = 0;
+		   area->AxisX->Interval = 100;
+		   area->AxisX->MajorGrid->Enabled = true;
+		   area->AxisY->MajorGrid->Enabled = true;
+		   chart->ChartAreas->Add(area);
+
+		   Series^ s = gcnew Series("Histogram");
+		   s->ChartType = SeriesChartType::Column;
+
+		   for (int i = 0; i < histSize; i++)
+			   s->Points->AddXY(i, hist[i]);
+
+		   chart->Series->Add(s);
+		   frm->Controls->Add(chart);
+		   frm->Show();
+	   }
+private: System::Void button3_Click(System::Object^ sender, System::EventArgs^ e) {
+	MaskMatris* mask_X = GetMaskFromTextBox(inputMaskX);
+	MaskMatris* mask_Y = GetMaskFromTextBox(inputMaskY);
+
+	ImageProcess img;
+
+	ImageMatris* startImage;
+	if (checkBox1->Checked)
+		startImage = img.GaussianBlur(inputImage, 2);
+	else
+		startImage = inputImage;
+
+	int* hist = img.GradientMagnitudeHistogram(startImage, mask_X, mask_Y, 1000);
+
+	ShowHistogramWindow(hist, 1000);
+
+	delete[] hist;
 }
 };
 }

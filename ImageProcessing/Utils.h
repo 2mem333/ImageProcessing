@@ -1,3 +1,8 @@
+#include <algorithm>
+#define radKatsayi 5 //buna gore arttirilir
+#define minRadius 15
+//int radius = minRadius + radKatsayi * r;
+
 struct ImageMatris {
 	int height;
 	int width;
@@ -21,6 +26,14 @@ struct DoubleTresholdValues {
 	int tlow;
 };
 
+	struct CircleCandidate
+	{
+		int a;
+		int b;
+		int rIndex;
+		int radius;
+		int vote;
+	};
 class ImageProcess {
 
 private:
@@ -107,6 +120,7 @@ public:
 	{
 		ImageMatris* outputImage = new ImageMatris();
 
+		//mask gezdirme fonksiyonu sonuc boyutu ile ayni hale getirmek icin, border problem yuzunden
 		int offset = MaskX->len / 2 * 2;
 		outputImage->width = inpImg->width- offset;
 		outputImage->height = inpImg->height- offset;
@@ -286,7 +300,6 @@ public:
 		if (nonZeroCount == 0)
 			return values;
 
-		// T_high: non-zero piksellerin ust %10'u
 		int targetHigh = (int)(nonZeroCount * 0.40);
 		if (targetHigh < 1)
 			targetHigh = 1;
@@ -302,7 +315,6 @@ public:
 			}
 		}
 
-		// T_low: T_high'in %40'i
 		values.tlow = (int)(0.5 * values.thigh);
 
 		return values;
@@ -494,58 +506,26 @@ public:
 	
 	//----------DEDECTING CIRCLES-------------------------
 
-	void HoughCircleSpaceOld(ImageMatris* binaryImage, int r = 0)
+	bool IsLocalMaximum(TensorMatris* tensor, int a, int b, int r, int neighborhoodXY, int neighborhoodR)
 	{
-		TensorMatris* tensorOut = new TensorMatris();
-		tensorOut->xlen = binaryImage->width;
-		tensorOut->ylen = binaryImage->height;
+		int planeSize = tensor->xlen * tensor->ylen;
+		int current = tensor->data[r * planeSize + b * tensor->xlen + a];
 
-		int* data = new int[tensorOut->xlen * tensorOut->ylen];
-		empty(data, tensorOut->xlen * tensorOut->ylen);
-
-		for (int row = 0; row < binaryImage->height; row++)
+		for (int rr = std::max(0, r - neighborhoodR); rr <= std::min(tensor->zlen - 1, r + neighborhoodR); rr++)
 		{
-			for (int col = 0; col < binaryImage->width; col++)
+			for (int yy = std::max(0, b - neighborhoodXY); yy <= std::min(tensor->ylen - 1, b + neighborhoodXY); yy++)
 			{
-				if (binaryImage->data[row * binaryImage->width + col] == 0) //binary pixelleri al
-					continue;
+				for (int xx = std::max(0, a - neighborhoodXY); xx <= std::min(tensor->xlen - 1, a + neighborhoodXY); xx++)
+				{
+					if (xx == a && yy == b && rr == r) continue;
 
-				for (int r = 10; r < 80; r += 5) {
-
-					for (int teta = 0; teta < 360; teta++) //teta açýsý sýnýrlý oldu
-					{
-						int a = (int)round(col - r * cosTable[teta]);
-						int b = (int)round(row - r * sinTable[teta]);
-
-						//neden bunu uyguladýk?
-						if (a >= 0 && a < tensorOut->xlen && b >= 0 && b < tensorOut->ylen)
-							data[ b * tensorOut->xlen + a] += 1;
-
-					}
+					int neighbor = tensor->data[rr * planeSize + yy * tensor->xlen + xx];
+					if (neighbor > current)
+						return false;
 				}
 			}
 		}
-
-		int max = 0;
-		int maxRow = 0;
-		int maxCol = 0;
-
-		for (int row = 0; row < binaryImage->height; row++)
-		{
-			for (int col = 0; col < binaryImage->width; col++)
-			{
-				if (data[row * tensorOut->xlen + col] > max) {
-					max = data[row * tensorOut->xlen + col];
-					maxRow = row;
-					maxCol = col;
-				}
-
-			}
-		}
-
-		std::cout << "Maximum: " << max << "\n";
-		std::cout << "Indeks: " << maxCol << ", " << maxRow;
-
+		return true;
 	}
 
 	TensorMatris* HoughCircleSpace(ImageMatris* binaryImage, int r = 0)
@@ -566,9 +546,9 @@ public:
 					continue;
 				
 				for (int r = 0; r < tensorOut->zlen; r++) {
-					int radius = 20 + r * 5;
+					int radius = minRadius + radKatsayi * r;
 
-					for (int teta = 0; teta < 360; teta += 5) //teta açýsý sýnýrlý oldu
+					for (int teta = 0; teta < 360; teta += 1) //teta açýsý sýnýrlý oldu
 					{
 						double rad = teta * 3.14159265 / 180.0;
 
@@ -586,22 +566,13 @@ public:
 		tensorOut->data = data;
 		return tensorOut;
 	}
-	struct CircleCandidate
-	{
-		int a;
-		int b;
-		int rIndex;
-		int radius;
-		int vote;
-	};
 	bool IsTooClose(const CircleCandidate& c1, const CircleCandidate& c2, int centerDistThresh, int radiusThresh)
 	{
 		int dx = c1.a - c2.a;
 		int dy = c1.b - c2.b;
 		int dr = abs(c1.radius - c2.radius);
 
-		return (dx * dx + dy * dy <= centerDistThresh * centerDistThresh) &&
-			(dr <= radiusThresh);
+		return (dx * dx + dy * dy <= centerDistThresh * centerDistThresh) && (dr <= radiusThresh);
 	}
 	ImageMatris* SelectNCircles(TensorMatris* tensor, int topN, int centerDistThresh, int radiusThresh)
 	{
@@ -612,7 +583,7 @@ public:
 
 		for (int r = 0; r < tensor->zlen; r++)
 		{
-			int radius = 20 + r * 5;
+			int radius = minRadius + radKatsayi * r;
 
 			for (int b = 0; b < tensor->ylen; b++)
 			{
@@ -621,6 +592,9 @@ public:
 					int idx = r * planeSize + b * tensor->xlen + a;
 					int vote = tensor->data[idx];
 					if (vote < 1)
+						continue;
+
+					if (!IsLocalMaximum(tensor, a, b, r, centerDistThresh, 2))
 						continue;
 
 					CircleCandidate cand;
@@ -726,5 +700,41 @@ public:
 		return outputImage;
 	}
 
+
+	int* GradientMagnitudeHistogram(ImageMatris* inpImg, MaskMatris* MaskX, MaskMatris* MaskY, int histSize = 1000)
+	{
+		int* outPicture_X = MoveMask_OneChannel(inpImg, MaskX);
+		int* outPicture_Y = MoveMask_OneChannel(inpImg, MaskY);
+
+		int offset = MaskX->len / 2 * 2;
+		int outWidth = inpImg->width - offset;
+		int outHeight = inpImg->height - offset;
+
+		int* hist = new int[histSize];
+		empty(hist, histSize);
+
+		for (int row = 0; row < outHeight; row++)
+		{
+			for (int col = 0; col < outWidth; col++)
+			{
+				int gx = outPicture_X[row * outWidth + col];
+				int gy = outPicture_Y[row * outWidth + col];
+
+				int magnitude = (int)sqrt((double)(gx * gx + gy * gy));
+
+				if (magnitude < 0)
+					magnitude = 0;
+				if (magnitude >= histSize)
+					magnitude = histSize - 1;
+
+				hist[magnitude]++;
+			}
+		}
+
+		delete[] outPicture_X;
+		delete[] outPicture_Y;
+
+		return hist;
+	}
 
 };
